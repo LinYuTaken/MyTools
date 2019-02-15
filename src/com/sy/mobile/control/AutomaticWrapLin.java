@@ -1,0 +1,87 @@
+package com.sy.mobile.control;
+
+import java.util.List;
+
+import com.example.tools.R;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+/**
+ * 多条数据后换行
+ * @author admin
+ *
+ */
+@Deprecated
+public class AutomaticWrapLin extends LinearLayout{
+
+	public AutomaticWrapLin(Context context) {
+		super(context);
+		// TODO Auto-generated constructor stub
+	}
+	public AutomaticWrapLin(Context context, AttributeSet attrs) {
+		super(context, attrs);
+		// TODO Auto-generated constructor stub
+	}
+
+	@SuppressLint("NewApi")
+	public AutomaticWrapLin(Context context, AttributeSet attrs, int defStyle) {
+		super(context, attrs, defStyle);
+		// TODO Auto-generated constructor stub
+	}
+
+	/**
+	 * 要显示的文字
+	 * @param name
+	 * @param line
+	 */
+	public void inten(String[] name,int line,Context con){
+		setOrientation(LinearLayout.VERTICAL);
+		View view = null;
+
+		for (int i = 0; i < name.length; i++) {
+			int i1 = (i+1)%line;
+			if(i==0||(i+2>line&&i1==1)){
+				view = LayoutInflater.from(con).inflate(R.layout.automaticlie, null);
+			}
+			LinearLayout lie = (LinearLayout) view.findViewById(R.id.lie1);
+			View view2 = LayoutInflater.from(con).inflate(R.layout.neweoomtext, null);
+			TextView text = (TextView) view2.findViewById(R.id.name);
+			text.setText(name[i]);
+			lie.addView(view2);
+			if((i+2>line&&i1==0)||i==name.length-1){
+				addView(view);
+			}
+		}
+	}
+
+	/**
+	 * 要显示的文字
+	 * @param con
+	 * @param line
+	 */
+	public void inten(List<View> views,int line,Context con){
+		setOrientation(LinearLayout.VERTICAL);
+		View view = null;
+
+		for (int i = 0; i < views.size(); i++) {
+			int i1 = (i+1)%line;
+			if(i==0||(i+2>line&&i1==1)){
+				view = LayoutInflater.from(con).inflate(R.layout.automaticlie, null);
+			}
+			LinearLayout lie = (LinearLayout) view.findViewById(R.id.lie1);
+//			View view2 = LayoutInflater.from(con).inflate(R.layout.neweoomtext, null);
+//			TextView text = (TextView) view2.findViewById(R.id.name);
+//			text.setText(name[i]);
+			lie.addView(views.get(i));
+			if((i+2>line&&i1==0)||i==views.size()-1){
+				addView(view);
+			}
+		}
+	}
+}

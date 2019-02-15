@@ -1,0 +1,27 @@
+<RelativeLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:example="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <TextView
+        android:id="@+id/text1"
+        android:layout_width="fill_parent"
+        android:layout_height="40dp"
+        android:gravity="center_vertical"
+        android:background="#ffffff"
+        android:text="标题"
+        android:textSize="15dp"
+        android:paddingLeft="15dp" />
+     <com.sy.mobile.control.ChangeColorIconWithTextView
+            android:id="@+id/id_indicator_one"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:padding="5dp"
+            example:text="工作"
+            example:text_size="12sp"
+            example:icon="@drawable/arrow"
+            example:color="#000000" />
+</RelativeLayout>

@@ -1,0 +1,535 @@
+package com.cll.Listview;
+
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import android.util.AttributeSet;
+import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewTreeObserver.OnGlobalLayoutListener;
+import android.view.animation.DecelerateInterpolator;
+import android.widget.AbsListView;
+import android.widget.AbsListView.OnScrollListener;
+import android.widget.LinearLayout;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.Scroller;
+import android.widget.TextView;
+
+import com.example.tools.R;
+
+/**
+ * 可下拉上拉ListView
+ *
+ * @author Administrator
+ */
+
+@SuppressLint("NewApi")
+public class DragListView extends ListView implements OnScrollListener {
+
+    private float mLastY = -1;
+    private Scroller mScroller;
+    private OnScrollListener mScrollListener;
+
+    private DragListViewListener mListViewListener;
+
+    // 头部
+    private DragListViewHeader mHeaderView;
+    // 依靠它计算头部的显示高度
+    private RelativeLayout mHeaderViewContent;
+    private TextView mHeaderTimeView;
+
+    private LinearLayout isshow;
+    // 头部高度
+    private int mHeaderViewHeight;
+    // 可以下拉刷新
+    private boolean mEnablePullRefresh = true;
+    // 正在刷新的状态
+    private boolean mPullRefreshing = false;
+
+    // 底部
+    private DragListViewFooter mFooterView;
+    private boolean mEnablePullLoad;
+    private boolean mPullLoading;
+    private boolean mIsFooterReady = false;
+
+    /**
+     * 用于存储上次更新时间
+     */
+    private SharedPreferences preferences;
+    /**
+     * 上次更新时间的字符串常量，用于作为SharedPreferences的键值
+     */
+    private static final String UPDATED_AT = "updated_at";
+    /**
+     * 为了防止不同界面的下拉刷新在上次更新时间上互相有冲突，使用id来做区分
+     */
+    private Object mId = -1;
+    /**
+     * 上次更新时间的毫秒值
+     */
+    private long lastUpdateTime;
+    /**
+     * 一分钟的毫秒值，用于判断上次的更新时间
+     */
+    public static final long ONE_MINUTE = 60 * 1000;
+
+    /**
+     * 一小时的毫秒值，用于判断上次的更新时间
+     */
+    public static final long ONE_HOUR = 60 * ONE_MINUTE;
+
+    /**
+     * 一天的毫秒值，用于判断上次的更新时间
+     */
+    public static final long ONE_DAY = 24 * ONE_HOUR;
+
+    /**
+     * 一月的毫秒值，用于判断上次的更新时间
+     */
+    public static final long ONE_MONTH = 30 * ONE_DAY;
+
+    /**
+     * 一年的毫秒值，用于判断上次的更新时间
+     */
+    public static final long ONE_YEAR = 12 * ONE_MONTH;
+    // item的总数
+    private int mTotalItemCount;
+
+    // 回滚底部或头部
+    private int mScrollBack;
+    private final static int SCROLLBACK_HEADER = 0;
+    private final static int SCROLLBACK_FOOTER = 1;
+    // 回滚时间
+    private final static int SCROLL_DURATION = 400; // scroll back duration
+    // 拉动距离大于50px 加载更多
+    private final static int PULL_LOAD_MORE_DELTA = 50;
+    private final static float OFFSET_RADIO = 1.8f;
+
+    public DragListView(Context context) {
+        super(context);
+        initWithContext(context);
+    }
+
+    public DragListView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        initWithContext(context);
+    }
+
+    public DragListView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        initWithContext(context);
+    }
+
+    /**
+     * 初始化上下文高度
+     *
+     * @param context
+     */
+    private void initWithContext(Context context) {
+        mScroller = new Scroller(context, new DecelerateInterpolator());
+        // 绑定监听
+        super.setOnScrollListener(this);
+
+        // 初始化头部
+        mHeaderView = new DragListViewHeader(context);
+        mHeaderViewContent = (RelativeLayout) mHeaderView.findViewById(R.id.pagination_header_content);
+        mHeaderTimeView = (TextView) mHeaderView.findViewById(R.id.pagination_header_time);
+        isshow = (LinearLayout) mHeaderView.findViewById(R.id.isshow);
+        addHeaderView(mHeaderView);
+
+        // 初始化底部
+        mFooterView = new DragListViewFooter(context);
+
+        // 初始化头部高度
+        mHeaderView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
+            public void onGlobalLayout() {
+                mHeaderViewHeight = mHeaderViewContent.getHeight();
+                getViewTreeObserver().removeGlobalOnLayoutListener(this);
+            }
+        });
+        //屏蔽自带的下拉回弹
+        setOverScrollMode(OVER_SCROLL_NEVER);
+
+        preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        refreshUpdatedAtValue();
+    }
+
+    /**
+     * 修改底部的提示文字
+     *
+     * @param ordinaryStr 普通状态显示的文字
+     * @param releaseStr  下拉松开显示的文字
+     */
+    public void setFooterString(String ordinaryStr, String releaseStr) {
+        mFooterView.setFooterString(ordinaryStr, releaseStr);
+    }
+
+    /**
+     * 修改顶部的提示文字
+     *
+     * @param ordinaryStr
+     * @param releaseStr
+     */
+    public void setHeaderString(String ordinaryStr, String releaseStr) {
+        mHeaderView.setHeaderString(ordinaryStr, releaseStr);
+    }
+
+    /**
+     * 设置颜色
+     */
+    public void setHeaderTextColor(int color) {
+        mHeaderView.setHeaderTextColor(color);
+    }
+
+    /**
+     * 设置时间是否显示
+     *
+     * @param star
+     */
+    public void setIsTimerShow(int star) {
+        isshow.setVisibility(star);
+    }
+
+    @Override
+    public void setAdapter(ListAdapter adapter) {
+        // 确保只加载一次底部
+        if (mIsFooterReady == false && mEnablePullLoad) {
+            mIsFooterReady = true;
+            addFooterView(mFooterView);
+        }
+        super.setAdapter(adapter);
+    }
+
+    /**
+     * 允许或不允许下拉刷新
+     *
+     * @param enable
+     */
+    public void setPullRefreshEnable(boolean enable) {
+        mEnablePullRefresh = enable;
+        if (!mEnablePullRefresh) {
+            // 不允许
+            mHeaderViewContent.setVisibility(View.INVISIBLE);
+        } else {
+            mHeaderViewContent.setVisibility(View.VISIBLE);
+        }
+    }
+
+    /**
+     * 允许或不允许上拉加载更多数据
+     *
+     * @param enable
+     */
+    public void setPullLoadEnable(boolean enable) {
+        mEnablePullLoad = enable;
+        if (!mEnablePullLoad) {
+            // 不允许
+            mFooterView.hide();
+            mFooterView.setVisibility(View.GONE);
+            mFooterView.setOnClickListener(null);
+        } else {
+            mPullLoading = false;
+            mFooterView.setVisibility(View.VISIBLE);
+            mFooterView.show();
+            mFooterView.setState(DragListViewFooter.STATE_NORMAL);
+            // 上拉或点击最后一行 都可以加载更多
+            mFooterView.setOnClickListener(new OnClickListener() {
+                public void onClick(View v) {
+                    startLoadMore();
+                }
+            });
+        }
+    }
+
+    /**
+     * 停止刷新，重置头部
+     */
+    public void stopRefresh() {
+        if (mPullRefreshing == true) {
+            mPullRefreshing = false;
+            resetHeaderHeight();
+        }
+    }
+
+    /**
+     * 停止加载更多，重置底部
+     */
+    public void stopLoadMore() {
+        if (mPullLoading == true) {
+            mPullLoading = false;
+            mFooterView.setState(DragListViewFooter.STATE_NORMAL);
+        }
+    }
+
+    /**
+     * 设置刷新时间
+     *
+     * @param time
+     */
+    public void setRefreshTime(String time) {
+        mHeaderTimeView.setText(time);
+    }
+
+    /**
+     * 支持滚动
+     */
+    private void invokeOnScrolling() {
+        if (mScrollListener instanceof OnXScrollListener) {
+            OnXScrollListener l = (OnXScrollListener) mScrollListener;
+            l.onXScrolling(this);
+        }
+    }
+
+    /**
+     * 更新头部高度
+     *
+     * @param delta
+     */
+    private void updateHeaderHeight(float delta) {
+//		if((int) delta + mHeaderView.getVisibleHeight()>300){
+//			return;
+//		}
+        mHeaderView.setVisibleHeight((int) delta + mHeaderView.getVisibleHeight());
+        if (mEnablePullRefresh && !mPullRefreshing) { // 未处于刷新状态，更新箭头
+            if (mHeaderView.getVisibleHeight() > mHeaderViewHeight) {
+                mHeaderView.setState(DragListViewHeader.STATE_READY);
+            } else {
+                mHeaderView.setState(DragListViewHeader.STATE_NORMAL);
+            }
+        }
+        setSelection(0); // scroll to top each time
+    }
+
+    /**
+     * 重置头部高度
+     */
+    private void resetHeaderHeight() {
+        int height = mHeaderView.getVisibleHeight();
+        if (height == 0) {
+            return;
+        }
+        // 正在刷新，或头部没有完全显示，不做任务动作
+        if (mPullRefreshing && height <= mHeaderViewHeight) {
+            return;
+        }
+        // 默认高度
+        int finalHeight = 0;
+        // 若正在刷新，头部显示完全高度
+        if (mPullRefreshing && height > mHeaderViewHeight) {
+            finalHeight = mHeaderViewHeight;
+        }
+        mScrollBack = SCROLLBACK_HEADER;
+        mScroller.startScroll(0, height, 0, finalHeight - height, SCROLL_DURATION);
+        invalidate();
+    }
+
+    /**
+     * 更新底部高度
+     *
+     * @param delta
+     */
+    private void updateFooterHeight(float delta) {
+        int height = mFooterView.getBottomMargin() + (int) delta;
+        if (mEnablePullLoad && !mPullLoading) {
+            if (height > PULL_LOAD_MORE_DELTA) {
+                // 上拉足够高时，加载更多
+                mFooterView.setState(DragListViewFooter.STATE_READY);
+            } else {
+                mFooterView.setState(DragListViewFooter.STATE_NORMAL);
+            }
+        }
+        mFooterView.setBottomMargin(height);
+    }
+
+    /**
+     * 重置底部高度
+     */
+    private void resetFooterHeight() {
+        int bottomMargin = mFooterView.getBottomMargin();
+        if (bottomMargin > 0) {
+            mScrollBack = SCROLLBACK_FOOTER;
+            mScroller.startScroll(0, bottomMargin, 0, -bottomMargin, SCROLL_DURATION);
+            invalidate();
+        }
+    }
+
+    /**
+     * 加载更多
+     */
+    private void startLoadMore() {
+        mPullLoading = true;
+        mFooterView.setState(DragListViewFooter.STATE_LOADING);
+        if (mListViewListener != null) {
+            mListViewListener.onLoadMore();
+        }
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        if (mLastY == -1) {
+            mLastY = ev.getRawY();
+        }
+
+        switch (ev.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                mLastY = ev.getRawY();
+                Log.i("listst", "按下");
+                break;
+            case MotionEvent.ACTION_MOVE:
+                final float deltaY = ev.getRawY() - mLastY;
+                mLastY = ev.getRawY();
+                if (getFirstVisiblePosition() == 0 && (mHeaderView.getVisibleHeight() > 0 || deltaY > 0)) {
+                    // 第一项正在显示，标题显示或拉下来。
+                    updateHeaderHeight(deltaY / OFFSET_RADIO);
+                    invokeOnScrolling();
+                } else if (getLastVisiblePosition() == mTotalItemCount - 1 && (mFooterView.getBottomMargin() > 0 || deltaY < 0)) {
+                    // 最后一项，已经拉起或想拉起来。
+                    if (getFirstVisiblePosition() > 0) {
+                        updateFooterHeight(-deltaY / OFFSET_RADIO);
+                    }
+                }
+                break;
+            default:
+                Log.i("bootbb", "getLastVisiblePosition:" + getLastVisiblePosition() + "mTotalItemCount:" + mTotalItemCount);
+                mLastY = -1; // reset
+                if (getFirstVisiblePosition() == 0) {
+                    // 调用刷新
+                    if (mEnablePullRefresh && mHeaderView.getVisibleHeight() > mHeaderViewHeight) {
+                        mPullRefreshing = true;
+                        mHeaderView.setState(DragListViewHeader.STATE_REFRESHING);
+                        if (mListViewListener != null) {
+                            preferences.edit().putLong(UPDATED_AT + mId, System.currentTimeMillis()).commit();
+                            mListViewListener.onRefresh();
+                        }
+                    }
+                    resetHeaderHeight();
+                } else if (getLastVisiblePosition() == mTotalItemCount - 1) {
+                    Log.i("bootbb", "mEnablePullLoad:" + mEnablePullLoad + "mFooterView.getBottomMargin():" + mFooterView.getBottomMargin());
+                    // 调用加载更多
+                    if (mEnablePullLoad && mFooterView.getBottomMargin() > PULL_LOAD_MORE_DELTA) {
+                        startLoadMore();
+                    }
+                    resetFooterHeight();
+                }
+                break;
+        }
+        refreshUpdatedAtValue();
+        return super.onTouchEvent(ev);
+    }
+
+    @Override
+    public void computeScroll() {
+        if (mScroller.computeScrollOffset()) {
+            if (mScrollBack == SCROLLBACK_HEADER) {
+                mHeaderView.setVisibleHeight(mScroller.getCurrY());
+            } else {
+                mFooterView.setBottomMargin(mScroller.getCurrY());
+            }
+            postInvalidate();
+            invokeOnScrolling();
+        }
+        super.computeScroll();
+    }
+
+    @Override
+    public void setOnScrollListener(OnScrollListener l) {
+        mScrollListener = l;
+    }
+
+    /**
+     * 滚动状态改变
+     */
+    public void onScrollStateChanged(AbsListView view, int scrollState) {
+        if (mScrollListener != null) {
+            mScrollListener.onScrollStateChanged(view, scrollState);
+        }
+    }
+
+    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+        // 发送给自己的监听器
+        mTotalItemCount = totalItemCount;
+        if (mScrollListener != null) {
+            mScrollListener.onScroll(view, firstVisibleItem, visibleItemCount, totalItemCount);
+        }
+    }
+
+    /**
+     * 设置自己的监听器
+     *
+     * @param l
+     */
+    public void setDragListViewListener(DragListViewListener l, Object i) {
+        mListViewListener = l;
+        mId = i;
+    }
+
+    /**
+     * 它将调用onxscrolling当页眉/页脚退回。
+     */
+    public interface OnXScrollListener extends OnScrollListener {
+        public void onXScrolling(View view);
+    }
+
+
+    public void onLoad() {
+        stopRefresh();
+        stopLoadMore();
+    }
+
+    /**
+     * 刷新下拉头中上次更新时间的文字描述。
+     */
+    private void refreshUpdatedAtValue() {
+        lastUpdateTime = preferences.getLong(UPDATED_AT + mId, -1);
+        long currentTime = System.currentTimeMillis();
+        long timePassed = currentTime - lastUpdateTime;
+        long timeIntoFormat;
+        String updateAtValue;
+        if (lastUpdateTime == -1) {
+            updateAtValue = getResources().getString(R.string.not_updated_yet);
+        } else if (timePassed < 0) {
+            updateAtValue = getResources().getString(R.string.time_error);
+        } else if (timePassed < ONE_MINUTE) {
+            updateAtValue = getResources().getString(R.string.updated_just_now);
+        } else if (timePassed < ONE_HOUR) {
+            timeIntoFormat = timePassed / ONE_MINUTE;
+            String value = timeIntoFormat + "分钟";
+            updateAtValue = String.format(getResources().getString(R.string.updated_at), value);
+        } else if (timePassed < ONE_DAY) {
+            timeIntoFormat = timePassed / ONE_HOUR;
+            String value = timeIntoFormat + "小时";
+            updateAtValue = String.format(getResources().getString(R.string.updated_at), value);
+        } else if (timePassed < ONE_MONTH) {
+            timeIntoFormat = timePassed / ONE_DAY;
+            String value = timeIntoFormat + "天";
+            updateAtValue = String.format(getResources().getString(R.string.updated_at), value);
+        } else if (timePassed < ONE_YEAR) {
+            timeIntoFormat = timePassed / ONE_MONTH;
+            String value = timeIntoFormat + "个月";
+            updateAtValue = String.format(getResources().getString(R.string.updated_at), value);
+        } else {
+            timeIntoFormat = timePassed / ONE_YEAR;
+            String value = timeIntoFormat + "年";
+            updateAtValue = String.format(getResources().getString(R.string.updated_at), value);
+        }
+        mHeaderView.setTimerText(updateAtValue);
+    }
+
+
+//	    @Override
+//	    /**
+//	     * 重写该方法，达到使ListView适应ScrollView的效果
+//	     */
+//	    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+//	        int expandSpec = MeasureSpec.makeMeasureSpec(Integer.MAX_VALUE >> 2,
+//	        MeasureSpec.AT_MOST);
+//	        super.onMeasure(widthMeasureSpec, expandSpec);
+//	    }
+
+
+}

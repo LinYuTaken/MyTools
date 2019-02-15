@@ -1,0 +1,182 @@
+package com.sy.mobile.picture;
+
+import com.example.tools.R;
+
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.os.SystemClock;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+
+public class ImagePagerActivity extends FragmentActivity {
+    private static final String STATE_POSITION = "STATE_POSITION";
+    public static final String EXTRA_IMAGE_INDEX = "image_index";
+    public static final String EXTRA_IMAGE_URLS = "image_urls";
+    public static final String EXTRA_COUNT_DOWN = "count_down";
+    private ArrayList<Fragment> pagerItemList = new ArrayList<Fragment>();//滑动碎片集合
+    private HackyViewPager mPager;
+    private int pagerPosition;
+    private TextView indicator, out_view;
+    Timer timer;
+    int closeInt;
+    boolean is_down;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.image_detail_pager);
+        pagerPosition = getIntent().getIntExtra(EXTRA_IMAGE_INDEX, 0);
+        String[] urls = getIntent().getStringArrayExtra(EXTRA_IMAGE_URLS);
+        is_down = getIntent().getBooleanExtra(EXTRA_COUNT_DOWN, false);
+        mPager = (HackyViewPager) findViewById(R.id.pager);
+        for (int i = 0; i < urls.length; i++) {
+            pagerItemList.add(new ImageDetailFragment().setUrl(urls[i], pagerPosition == i ? true : false));
+        }
+        out_view = findViewById(R.id.out_view);
+        MyFragmentPagerAdapter mAdapter = new MyFragmentPagerAdapter(getSupportFragmentManager(), pagerItemList);
+        mPager.setAdapter(mAdapter);
+        mPager.setOffscreenPageLimit(pagerItemList.size() - 1);
+        indicator = (TextView) findViewById(R.id.indicator);
+        if (is_down)
+            timeClose(20);
+        CharSequence text = getString(R.string.viewpager_indicator, 1, mPager
+                .getAdapter().getCount());
+        indicator.setText(text);
+        // 更新下标
+        mPager.setOnPageChangeListener(new OnPageChangeListener() {
+
+            @Override
+            public void onPageScrollStateChanged(int arg0) {
+            }
+
+            @Override
+            public void onPageScrolled(int arg0, float arg1, int arg2) {
+            }
+
+            @Override
+            public void onPageSelected(int arg0) {
+                CharSequence text = getString(R.string.viewpager_indicator,
+                        arg0 + 1, mPager.getAdapter().getCount());
+                indicator.setText(text);
+            }
+
+        });
+        if (savedInstanceState != null) {
+            pagerPosition = savedInstanceState.getInt(STATE_POSITION);
+        }
+
+        mPager.setCurrentItem(pagerPosition);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_POSITION, mPager.getCurrentItem());
+    }
+
+    private class MyFragmentPagerAdapter extends FragmentPagerAdapter {
+
+        private List<Fragment> mFragments;
+
+        MyFragmentPagerAdapter(FragmentManager fm, List<Fragment> fragments) {
+            super(fm);
+            mFragments = fragments;
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            return mFragments.get(position);
+        }
+
+        @Override
+        public Object instantiateItem(ViewGroup container, int position) {
+            return super.instantiateItem(container, position);
+        }
+
+        @Override
+        public void destroyItem(ViewGroup container, int position, Object object) {
+            super.destroyItem(container, position, object);
+        }
+
+        @Override
+        public int getCount() {
+            return mFragments.size();
+        }
+    }
+
+    /**
+     * 计时关闭页面
+     */
+    public void timeClose(int closeInttest) {
+        this.closeInt = closeInttest;
+        out_view.setVisibility(View.VISIBLE);
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        closeInt--;
+                        if (closeInt < 1) {
+                            if (timer != null) {
+                                timer.cancel();
+                                timer = null;
+                            }
+                            finish();
+                        }
+                        out_view.setText(closeInt + "秒后自动返回");
+                    }
+                });
+            }
+        }, 1000, 1000);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
+    }
+
+    //	private class ImagePagerAdapter extends FragmentStatePagerAdapter {
+//
+//		public String[] fileList;
+//
+//		public ImagePagerAdapter(FragmentManager fm, String[] fileList) {
+//			super(fm);
+//			this.fileList = fileList;
+//		}
+//
+//		@Override
+//		public int getCount() {
+//			return fileList == null ? 0 : fileList.length;
+//		}
+//
+//		@Override
+//		public Fragment getItem(int position) {
+//			String url = fileList[position];
+//			return ImageDetailFragment.newInstance(url);
+//		}
+
+//	}
+}

@@ -1,0 +1,71 @@
+-- Merging decision tree log ---
+manifest
+ADDED from F:\asxms\Tools\AndroidManifest.xml:2:1-32:12
+INJECTED from F:\asxms\Tools\AndroidManifest.xml:2:1-32:12
+INJECTED from F:\asxms\Tools\AndroidManifest.xml:2:1-32:12
+	package
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:3:5-32
+		INJECTED from F:\asxms\Tools\AndroidManifest.xml
+		INJECTED from F:\asxms\Tools\AndroidManifest.xml
+	xmlns:android
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:2:11-69
+uses-permission#android.permission.ACCESS_NETWORK_STATE
+ADDED from F:\asxms\Tools\AndroidManifest.xml:6:5-79
+	android:name
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:6:22-76
+uses-permission#android.permission.CALL_PHONE
+ADDED from F:\asxms\Tools\AndroidManifest.xml:7:5-69
+	android:name
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:7:22-66
+uses-permission#android.permission.REQUEST_INSTALL_PACKAGES
+ADDED from F:\asxms\Tools\AndroidManifest.xml:8:5-82
+	android:name
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:8:22-80
+application
+ADDED from F:\asxms\Tools\AndroidManifest.xml:10:5-25:19
+	android:label
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:12:9-41
+	android:allowBackup
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:11:9-35
+activity#com.lin.mobile.album.ImageSelectActivity
+ADDED from F:\asxms\Tools\AndroidManifest.xml:13:9-15:52
+	android:screenOrientation
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:15:13-49
+	android:name
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:14:13-68
+provider#android.support.v4.content.FileProvider
+ADDED from F:\asxms\Tools\AndroidManifest.xml:16:9-24:20
+	android:grantUriPermissions
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:20:13-47
+	android:authorities
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:18:13-60
+	android:exported
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:19:13-37
+	android:name
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:17:13-67
+meta-data#android.support.FILE_PROVIDER_PATHS
+ADDED from F:\asxms\Tools\AndroidManifest.xml:21:13-23:58
+	android:resource
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:23:17-55
+	android:name
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:22:17-67
+supports-screens
+ADDED from F:\asxms\Tools\AndroidManifest.xml:26:5-31:39
+	android:largeScreens
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:28:9-36
+	android:smallScreens
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:31:9-36
+	android:normalScreens
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:29:9-38
+	android:resizeable
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:30:9-34
+	android:anyDensity
+		ADDED from F:\asxms\Tools\AndroidManifest.xml:27:9-34
+uses-sdk
+INJECTED from F:\asxms\Tools\AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from F:\asxms\Tools\AndroidManifest.xml
+INJECTED from F:\asxms\Tools\AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from F:\asxms\Tools\AndroidManifest.xml
+		ADDED from F:\asxms\Tools\AndroidManifest.xml
+		INJECTED from F:\asxms\Tools\AndroidManifest.xml

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/kuang"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <ImageView
+            android:layout_width="103dp"
+            android:layout_height="75dp"
+            android:src="@drawable/confirm_notice" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="22dp"
+            android:layout_marginTop="10dp"
+            android:text="发现新版本"
+            android:textColor="@color/colorPrimary" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/content"
+            android:textSize="16dp"
+            android:padding="5dp"
+            android:textColor="@color/typeface_ash" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            >
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                android:layout_weight="1"
+                android:background="@drawable/loginbutton"
+                android:text="现在升级"
+                android:id="@+id/confirm"
+                android:textColor="@color/white"/>
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                android:layout_weight="1"
+                android:background="@drawable/loginbutton2"
+                android:text="暂不升级"
+                android:textColor="@color/typeface_deep_ash"
+                android:id="@+id/cancel"/>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merger version="3"><dataSet config="main"><source path="F:\asxms\Tools\assets"><file name="emojis.json" path="F:\asxms\Tools\assets\emojis.json"/><file name="meituan_cities.db" path="F:\asxms\Tools\assets\meituan_cities.db"/></source><source path="F:\asxms\Tools\build\generated\assets\shaders\debug"/></dataSet><dataSet config="debug"><source path="F:\asxms\Tools\src\debug\assets"/></dataSet></merger>

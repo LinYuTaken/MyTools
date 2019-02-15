@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="46dp"
+    android:background="#FAFAFA"
+    android:gravity="center_vertical" >
+
+    <RelativeLayout
+        android:id="@+id/left_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:clickable="true" >
+
+        <ImageView
+            android:id="@+id/left_image"
+            android:layout_width="50dip"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:src="@drawable/back"
+            android:layout_centerInParent="true"
+            android:scaleType="centerInside" />
+        <TextView
+            android:id="@+id/main_left_text"
+            android:text=""
+            android:textColor="#ffffff"
+            android:textSize="13sp"
+            android:padding="10dp"
+            android:visibility="gone"
+            android:layout_width="120dp"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true" />
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:textColor="#000000"
+        android:textSize="18sp" />
+
+    <RelativeLayout
+        android:id="@+id/right_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true" >
+
+        <ImageView
+            android:id="@+id/right_image"
+            android:layout_width="50dp"
+            android:padding="10dp"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:scaleType="centerInside" />
+        <TextView
+            android:id="@+id/right_text"
+            android:text=""
+            android:textColor="#ffffff"
+            android:textSize="13sp"
+            android:padding="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true" />
+    </RelativeLayout>
+<View
+    android:layout_width="match_parent"
+    android:layout_height="1dp"
+    android:background="#DCDCDC"
+    android:id="@+id/bommView"
+    android:layout_alignParentBottom="true"/>
+</RelativeLayout>

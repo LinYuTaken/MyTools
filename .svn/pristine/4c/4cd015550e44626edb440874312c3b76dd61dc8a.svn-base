@@ -1,0 +1,268 @@
+package com.example.g;
+
+import android.annotation.TargetApi;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.os.Build;
+import android.os.Build.VERSION_CODES;
+import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.ContextCompat;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.LinearLayout;
+
+import com.example.tools.R;
+import com.sy.mobile.control.MyDialog;
+import com.sy.mobile.control.TitleBar;
+import com.sy.mobile.net.HttpDream;
+import com.wxample.data.MyData;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+public abstract class BaseActivity extends FragmentActivity implements View.OnClickListener {
+    protected TitleBar title_bar;
+    LinearLayout container, main_back;
+    View mainView;
+    protected HttpDream http;
+    private static String url;
+
+    @Override
+    protected void onCreate(Bundle arg0) {
+        // TODO Auto-generated method stub
+        super.onCreate(arg0);
+        setContentView(R.layout.base_main);
+        title_bar = findViewById(R.id.title_bar);
+        container = findViewById(R.id.container);
+        main_back = findViewById(R.id.main_back);
+        title_bar.setLeftLayoutClickListener(this);
+        setView();
+        baseInit();
+        initHttp();
+        init();
+    }
+
+    public void setTransparentTop() {
+        main_back.setBackgroundColor(Color.parseColor("#00000000"));
+        title_bar.setBackgroundColor(Color.parseColor("#00000000"));
+    }
+
+    /**
+     * 设置背景色
+     */
+    public void setMainBack(int color) {
+        main_back.setBackgroundColor(color);
+    }
+
+    /**
+     * 自定义初始化
+     */
+    public void baseInit() {
+//        if (Build.VERSION.SDK_INT >= VERSION_CODES.KITKAT) {
+//            //透明状态栏
+//            getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+//            //透明导航栏
+////            getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+//        }
+    }
+
+    /**
+     * 隐藏标题栏
+     */
+    @TargetApi(VERSION_CODES.ICE_CREAM_SANDWICH)
+    public void setHideTitle() {
+        title_bar.setVisibility(View.GONE);
+        title_bar.setBottomViewVisibility(View.GONE);
+    }
+
+    @TargetApi(VERSION_CODES.ICE_CREAM_SANDWICH)
+    public void setShowTitle() {
+        title_bar.setVisibility(View.VISIBLE);
+    }
+
+    public static void setUrl(String url1) {
+        url = url1;
+    }
+
+    /**
+     * 设置标题
+     *
+     * @param title
+     */
+    protected void setTitle(String title) {
+        title_bar.setTitle(title);
+    }
+
+    /**
+     * 全屏
+     */
+    protected void fullScreen() {
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    }
+
+    /**
+     * 默认不弹出软键盘
+     */
+    protected void defaultNotKeyboard() {
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE | WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+    }
+
+    /**
+     * 设置主布局
+     *
+     * @param Rid
+     */
+    protected void setContentViewBase(int Rid) {
+        mainView = LayoutInflater.from(this).inflate(Rid, null);
+        //这里要从新设置宽高，因为提取view后原布局设置的宽高会变成默认值
+        LinearLayout.LayoutParams linear = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+        mainView.setLayoutParams(linear);
+        container.addView(mainView);
+    }
+
+    /**
+     * 根据id获取view
+     *
+     * @param Rid
+     * @return
+     */
+    protected <T extends View> T findViewByIdBase(int Rid) {
+        return mainView.findViewById(Rid);
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v.getId() == R.id.left_layout)
+            //如果有自定义的返回使用自定义的
+            if (onBack != null)
+                onBack.onBack();
+            else
+                finish();
+        else
+            onClickBase(v.getId());
+    }
+
+    private void initHttp() {
+        http = new HttpDream(url, this);
+        //接口回调
+        http.setOnTheReturnValue(new HttpDream.Cont() {
+            @Override
+            public void content(Object content, int no) {
+                // TODO Auto-generated method stub
+                if (content != null) {
+                    // 把解析后的json装进集合或map里
+                    Map<String, Object> contMap = (Map<String, Object>) content;
+                    // 根据不同的状态给出不同的提示
+                    if (contMap.get("statusCode").equals("0")) {
+                        getDataCallback(contMap, no);
+                    } else {
+                        MyDialog.showTextToast(MyData.mToString(contMap.get("errorMsg")), BaseActivity.this);
+                        getDataCallbackNot(no);
+                    }
+                } else {
+                    MyDialog.showTextToast("获取信息失败", BaseActivity.this);
+                }
+            }
+        });
+    }
+
+    /**
+     * http成功回调
+     *
+     * @param contMap
+     */
+    public void getDataCallback(Map<String, Object> contMap, int no) {
+
+    }
+
+    /**
+     * http失败
+     */
+    public void getDataCallbackNot(int no) {
+    }
+
+    /**
+     * 点击退出
+     */
+    public interface OnBack {
+        void onBack();
+    }
+
+    protected OnBack onBack;
+
+    protected abstract void setView();
+
+    protected abstract void init();
+
+    protected void onClickBase(int id) {
+    }
+
+    ;
+
+    /**
+     * 申请权限
+     */
+    protected void requestRuntimePermissions(String[] permissions) {
+        if (Build.VERSION.SDK_INT >= 23) {
+            List<String> permissionList = new ArrayList<>();
+            // 遍历每一个申请的权限，把没有通过的权限放在集合中
+            for (String permission : permissions) {
+                if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                    permissionList.add(permission);
+                }
+            }
+            // 申请权限
+            if (!permissionList.isEmpty()) {
+                ActivityCompat.requestPermissions(this, permissionList.toArray(new String[permissionList.size()]), 1);
+            } else {
+                //表示全部都有权限
+                granted();
+            }
+        } else {
+            granted();
+        }
+    }
+
+    /**
+     * 申请后的处理
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (grantResults.length > 0) {
+            List<String> deniedList = new ArrayList<>();
+            // 遍历所有申请的权限，把被拒绝的权限放入集合
+            for (int i = 0; i < grantResults.length; i++) {
+                int grantResult = grantResults[i];
+                if (grantResult == PackageManager.PERMISSION_GRANTED) {
+
+                } else {
+                    deniedList.add(permissions[i]);
+                }
+            }
+            if (!deniedList.isEmpty()) {
+                denied(deniedList);
+            } else {
+                granted();
+            }
+        }
+    }
+
+    public void granted() {
+    }
+
+    public void denied(List<String> deniedList) {
+    }
+
+    @Override
+    protected void onDestroy() {
+        mainView = null;
+        super.onDestroy();
+    }
+}
+
+

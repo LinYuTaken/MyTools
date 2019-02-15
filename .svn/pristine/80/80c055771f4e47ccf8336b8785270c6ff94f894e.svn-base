@@ -1,0 +1,602 @@
+package com.sy.mobile.net;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.ParseException;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.AbstractHttpMessage;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.CoreConnectionPNames;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.google.gson.Gson;
+import com.sy.moblie.json.JsonAnalytical;
+
+import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnDismissListener;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
+import android.widget.Toast;
+
+/**
+ * http
+ */
+public class HttpDream {
+    String ip = "";
+    Context context;
+    String biaozhi;
+    Object obj;
+    // Gson gson = new Gson();
+    private Dialog pdialog;
+    String ide;
+    boolean istg;
+    public final static int MPOST = 1;
+    public final static int MGET = 2;
+    private String field = "";
+    private int no;
+    private Map<String, Boolean> map = new HashMap<String, Boolean>();
+    JsonAnalytical jso = new JsonAnalytical();
+    HttpPost httpRequest = new HttpPost();
+    HttpGet http = new HttpGet();
+    String sid = "";
+    // 是否已经返回
+    boolean isre;
+    // 是否已经销毁了
+    boolean isOndie;
+
+    public interface Cont {
+        /**
+         * @param 返回数据
+         */
+        public void content(Object content, int no);
+    }
+
+    public interface Cancel {
+        /**
+         * @param 用户取消
+         */
+        public void cancelReturn(int no);
+    }
+
+    Cont callback;
+    Cancel canretu;
+
+    // "http://192.168.108.31/manageapp/";
+    // "http://testwx.wamwifi.com:8888/";
+
+    // "http://www.myprovence.cn/";
+    public void setCancelReturn(Cancel canretu) {
+        this.canretu = canretu;
+    }
+
+    /**
+     * @param ip 域名
+     */
+    public HttpDream(String ip, Context context) {
+        this.ip = ip;
+        this.context = context;
+    }
+
+    /**
+     * 设置ip
+     *
+     * @param ip
+     */
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    /**
+     * 返回解析类
+     *
+     * @return
+     */
+    public JsonAnalytical getJsonAnalytical() {
+        return jso;
+    }
+
+    /**
+     * 显示等待窗口
+     *
+     * @param te  显示的内容
+     * @param lei 标识
+     */
+    public void showDialog(String te, final String lei) {
+        if (te == null)
+            return;
+
+        pdialog = ProgressDialog.show(context, "提示", te);
+        pdialog.setOnDismissListener(new OnDismissListener() {
+
+            @Override
+            public void onDismiss(DialogInterface arg0) {
+                // TODO Auto-generated method stub
+                // showToast("关闭");
+                map.put(lei, true);
+            }
+        });
+        pdialog.setCancelable(true);
+        map.put(lei, false);
+    }
+
+    /**
+     * 显示等待窗口
+     *
+     * @param te  显示的内容
+     * @param lei 标识
+     */
+    public void showDialog(Dialog dialog, final String lei) {
+        isre = false;
+        pdialog = dialog;
+        pdialog.setOnDismissListener(new OnDismissListener() {
+
+            @Override
+            public void onDismiss(DialogInterface arg0) {
+                // TODO Auto-generated method stub
+                // showToast("关闭");
+                map.put(lei, true);
+                if (canretu != null && isre == false)
+                    canretu.cancelReturn(no);
+            }
+        });
+        pdialog.setCancelable(true);
+        map.put(lei, false);
+    }
+
+    /**
+     * 关闭等待窗口
+     *
+     * @param lei 标识
+     * @return
+     */
+    public boolean cloDialog(String lei) {
+        if (lei == null)
+            return true;
+        if (map.get(lei)) {
+            return false;
+        } else {
+            isre = true;
+            if (pdialog != null) {
+                pdialog.dismiss();
+                pdialog = null;
+            }
+            return true;
+        }
+    }
+
+    /**
+     * 关闭等待窗口
+     *
+     * @param lei 标识
+     * @return
+     */
+    public void cloDialog() {
+        isre = true;
+        if (pdialog != null) {
+            pdialog.dismiss();
+            pdialog = null;
+        }
+    }
+
+    /**
+     * 关闭
+     */
+    public void onDestroy() {
+        cloDialog();
+        isOndie = true;
+    }
+
+    /**
+     * 添加解析字段
+     */
+    public void setJsonField(String field) {
+        this.field = field;
+    }
+
+    public String getSid() {
+        return sid;
+    }
+
+    /**
+     * 获取数据(默认的提示框)
+     *
+     * @param Conten         提示框要显示的内容
+     * @param identification 线程的标识字段
+     * @param Route          路径
+     * @param Data           参数
+     * @param getorpost      get或post
+     * @param cla            解析实体类 （不解析可传null）
+     * @param no             标识数
+     */
+    public void getData(String Conten, final String identification,
+                        final String Route, final Map<String, String> Data,
+                        final int getorpost, final Class<?> cla, final int no1) {
+        if (Conten != null) {
+            showDialog(Conten, identification);
+        }
+        this.no = no1;
+        ide = identification;
+        new Thread() {
+            public void run() {
+                String list = "";
+                if (getorpost == MGET) {
+                    list = getGet(Route, Data);
+                } else {
+                    list = getPost(Route, Data);
+                }
+                try {
+                    Message mess = new Message();
+                    if (field.length() > 1) {
+                        JSONObject js = new JSONObject(list);
+                        list = js.getString(field);
+                    }
+                    mess.what = no1;
+
+                    if (cla == null && no1 > 0) {
+                        mess.obj = jso.JsonRe(list);
+                        if (mess.obj == null) {
+                            mess.what = -1;
+                        } else {
+                            Map<String, Object> test = (Map<String, Object>) mess.obj;
+                            if (test.size() == 0)
+                                mess.what = -1;
+                        }
+                    } else if (cla == null && no1 < 0) {
+                        mess.obj = list;
+                    } else {
+                        mess.obj = jso.analyJs(list, cla);
+                    }
+                    han.sendMessage(mess);
+                } catch (JSONException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                    Message mess = new Message();
+                    mess.what = -1;
+                    mess.obj = "获取数据失败";
+                    han.sendMessage(mess);
+                }
+            }
+
+            ;
+        }.start();
+    }
+
+    /**
+     * 获取数据 (传入自定义提示框)
+     *
+     * @param identification 线程的标识字段
+     * @param Route          路径
+     * @param Data           参数
+     * @param getorpost      get或post
+     * @param cla            解析实体类
+     * @param dialog         提示框
+     * @param no             标识数
+     */
+    public void getData(final String identification, final String Route,
+                        final Map<String, String> Data, final int getorpost,
+                        final Class<?> cla, Dialog dialog, int no) {
+        if (dialog != null) {
+            showDialog(dialog, identification);
+        }
+        getData(null, identification, Route, Data, getorpost, cla, no);
+    }
+
+    /**
+     * 获取数据 (返回未解析字符串)
+     *
+     * @param identification 线程的标识字段
+     * @param Route          路径
+     * @param Data           参数
+     * @param getorpost      get或post
+     * @param dialog         提示框
+     * @param no             标识数
+     */
+    public void getData(final String identification, final String Route,
+                        final Map<String, String> Data, final int getorpost, Dialog dialog,
+                        int no) {
+        if (dialog != null)
+            showDialog(dialog, identification);
+        getData(null, identification, Route, Data, getorpost, null, no);
+    }
+
+    Handler han = new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            //如果销毁了就不返回了
+            if (isOndie)
+                return false;
+            if (cloDialog(ide)) {
+                if (msg.what != -1) {
+                    if (callback != null)
+                        callback.content(msg.obj, msg.what);
+                } else {
+                    if (callback != null)
+                        callback.content(null, msg.what);
+                }
+            }
+            return false;
+        }
+    });
+
+    /**
+     * 获取返回值
+     *
+     * @param callback
+     */
+    public void setOnTheReturnValue(final Cont callback) {
+        this.callback = callback;
+    }
+
+    /**
+     * 添加头
+     */
+    public void addHead(int type, String key, String value) {
+        if (type == MPOST) {
+            httpRequest.addHeader(key, value);
+        } else if (type == MGET) {
+            http.addHeader(key, value);
+        }
+    }
+
+    /**
+     * 设置头
+     *
+     * @param type
+     * @param key
+     * @param value
+     */
+    public void setHead(int type, String key, String value) {
+        if (type == MPOST) {
+            httpRequest.setHeader(key, value);
+        } else if (type == MGET) {
+            http.setHeader(key, value);
+        }
+    }
+
+    private void showToast(String te) {
+        Toast.makeText(context, te, Toast.LENGTH_LONG).show();
+    }
+
+    /**
+     * 通过坐标获取城市
+     *
+     * @return
+     */
+    public String getCity(String itude) {
+        String is = "";
+
+        try {
+            String httpUrl = "http://api.map.baidu.com/geocoder?output=json&location="
+                    + itude + "&key=F9FBF9FAA9BA37C0C6085BD280723A659EC51B20";
+            HttpGet http = new HttpGet(httpUrl);
+            HttpResponse request = new DefaultHttpClient().execute(http);
+            if (request.getStatusLine().getStatusCode() == 200) {
+                /* 读取返回数据 */
+                is = EntityUtils.toString(request.getEntity());
+            }
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return is;
+
+    }
+
+    /**
+     * post提交
+     *
+     * @param Route    路径
+     * @param postData 要传的参数，没有时传null
+     * @return
+     */
+    public String getPost(String Route, Map<String, String> postData) {
+        String is = "";
+        String httpUrl = ip + Route;
+        if (ip == null || ip.length() == 0) {
+            return "";
+        }
+        URI uri = null;
+        try {
+			/* 建立HttpPost连接 */
+            // httpRequest = new HttpPost(httpUrl);
+			/* Post运作传送变数必须用NameValuePair[]阵列储存 */
+            // URL url = new URL(httpUrl);
+            // URI uri = new URI(url.getProtocol(), url.getHost(),
+            // url.getPath(),
+            // url.getQuery(), null);
+            try {
+                uri = URI.create(httpUrl);
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                try {
+                    URL url = new URL(httpUrl);
+                    uri = new URI(url.getProtocol(), url.getHost(),
+                            url.getPath(), url.getQuery(), null);
+                } catch (URISyntaxException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            }
+            httpRequest.setURI(uri);
+            // httpRequest.setHeader("Content-Type",
+            // "application/x-www-form-urlencoded");
+            // 请求超时
+            httpRequest.getParams().setParameter(
+                    CoreConnectionPNames.CONNECTION_TIMEOUT, 20000);
+            // 读取超时
+            httpRequest.getParams().setParameter(
+                    CoreConnectionPNames.SO_TIMEOUT, 20000);
+            List<NameValuePair> params = new ArrayList<NameValuePair>();
+            if (postData != null) {
+                Set<String> key = postData.keySet();
+                for (Iterator it = key.iterator(); it.hasNext(); ) {
+                    String s = (String) it.next();
+                    params.add(new BasicNameValuePair(s, postData.get(s)));
+                }
+            }
+            Header[] mee = httpRequest.getAllHeaders();
+            String ii = "";
+            for (int i = 0; i < mee.length; i++) {
+                ii += "name:" + mee[i].getName() + "value:" + mee[i].getValue();
+            }
+            Log.i("bycookies", ii);
+            Log.i("httpto", httpUrl + params.toString());
+            if (postData != null) {
+                // 发出HTTP request
+                httpRequest.setEntity(new UrlEncodedFormEntity(params,
+                        HTTP.UTF_8));
+            }
+            DefaultHttpClient httpClient = new DefaultHttpClient();
+            // 取得HTTP response
+            HttpResponse httpResponse = httpClient.execute(httpRequest);
+            // 若状态码为200
+            if (httpResponse.getStatusLine().getStatusCode() == 200) {
+                // 取出回应字串
+                is = EntityUtils.toString(httpResponse.getEntity());
+                CookieStore mCookieStore = httpClient.getCookieStore();
+                List<Cookie> cookies = mCookieStore.getCookies();
+                for (int i = 0; i < cookies.size(); i++) {
+                    // 这里是读取Cookie['PHPSESSID']的值存在静态变量中，保证每次都是同一个值
+                    // if ("JSESSIONID".equals(cookies.get(i).getName())) {
+                    sid = cookies.get(i).getValue();
+                    Log.i("tocookies", cookies.toString());
+                    // break;
+                    // }
+                }
+            } else {
+                is = "返回:" + httpResponse.getStatusLine().getStatusCode();
+            }
+        } catch (MalformedURLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ClientProtocolException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ParseException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        Log.i("httpby", is);
+        return is;
+    }
+
+    /**
+     * get提交
+     *
+     * @param Route   路径
+     * @param getData 参数
+     * @return
+     */
+    public String getGet(String Route, Map<String, String> getData) {
+        String is = "";
+        String cs = "";
+        URI uri = null;
+        if (ip == null || ip.length() == 0) {
+            return "";
+        }
+        try {
+            if (getData != null) {
+                cs = "?";
+                Set<String> key = getData.keySet();
+                for (Iterator it = key.iterator(); it.hasNext(); ) {
+                    String s = (String) it.next();
+                    cs += s + "=" + getData.get(s) + "&";
+                }
+                cs = cs.substring(0, cs.length() - 1);
+            }
+            String httpUrl = ip + Route + cs;
+            Log.i("httpto", httpUrl);
+            try {
+                uri = URI.create(httpUrl);
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                try {
+                    URL url = new URL(httpUrl);
+                    uri = new URI(url.getProtocol(), url.getHost(),
+                            url.getPath(), url.getQuery(), null);
+                } catch (URISyntaxException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            }
+            Log.i("bycookies", http.getAllHeaders().toString());
+
+            http.setURI(uri);
+            // 请求超时
+            http.getParams().setParameter(
+                    CoreConnectionPNames.CONNECTION_TIMEOUT, 20000);
+            // 读取超时
+            http.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT,
+                    20000);
+            DefaultHttpClient httpClient = new DefaultHttpClient();
+            HttpResponse request = httpClient.execute(http);
+            if (request.getStatusLine().getStatusCode() == 200) {
+				/* 读取返回数据 */
+                is = EntityUtils.toString(request.getEntity());
+                CookieStore mCookieStore = httpClient.getCookieStore();
+                List<Cookie> cookies = mCookieStore.getCookies();
+                for (int i = 0; i < cookies.size(); i++) {
+                    // 这里是读取Cookie['PHPSESSID']的值存在静态变量中，保证每次都是同一个值
+                    // if ("JSESSIONID".equals(cookies.get(i).getName())) {
+                    sid = cookies.get(i).getValue();
+                    Log.i("tocookies", cookies.toString());
+                    break;
+                    // }
+                }
+            } else {
+                is = "返回:" + request.getStatusLine().getStatusCode();
+            }
+        } catch (MalformedURLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ClientProtocolException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ParseException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        Log.i("httpby", is);
+        return is;
+
+    }
+}

@@ -1,0 +1,596 @@
+package com.sy.mobile.control;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.example.tools.R;
+import com.sy.mobile.analytical.ScreenTools;
+
+import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.Dialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnKeyListener;
+import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.PaintDrawable;
+import android.view.Gravity;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.MeasureSpec;
+import android.view.ViewGroup;
+import android.view.View.OnClickListener;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.BaseAdapter;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.LinearLayout.LayoutParams;
+
+/**
+ * 各种提示框
+ *
+ * @author Administrator
+ */
+public class MyDialog {
+    private static Toast toast = null;
+    private static Dialog dialog;
+    private PopupWindow popupWindow;
+    int no;
+    String name = "";
+    static int oneTxtColor = 0;
+    static int twoTxtColor = 0;
+    //pop窗口显示在上面
+    public static int POPWIN_TOP = 1;
+    //显示在下面
+    public static int POPWIN_DOMN = 2;
+    //pop窗口是否显示关闭按钮
+    private boolean iscenshow = false;
+
+    private static int layoutId;
+
+    private static String titleString = "";
+
+    private boolean isCen = false;
+
+    /**
+     * Adapter操作事件
+     */
+    public interface AdapterInterface {
+        /**
+         * 点击事件
+         *
+         * @param id 列id
+         */
+        public void Click(Map<String, String> map, int no);
+
+    }
+
+    AdapterInterface aif;
+
+    /**
+     * 设置按钮颜色
+     *
+     * @param oneTxtColor
+     * @param twoTxtColor
+     */
+    public static void setTextColor(int oneTxtColor2, int twoTxtColor2) {
+        oneTxtColor = oneTxtColor2;
+        twoTxtColor = twoTxtColor2;
+    }
+
+    /**
+     * 设置标题
+     * @param titleString1
+     */
+    public static void setTitleString(String titleString1){
+        titleString = titleString1;
+    }
+
+    /**
+     * 等待框
+     *
+     * @param context
+     * @param msg
+     * @return
+     */
+    public static Dialog createLoadingDialog(Context context) {
+//		closeDialog();
+        LayoutInflater li = LayoutInflater.from(context);
+        View view = li.inflate(R.layout.waitforbox, null);
+        Dialog dialog = new Dialog(context, R.style.mDialog);
+        dialog.setContentView(view);
+        dialog.setCancelable(true);
+        try {
+            dialog.show();
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return dialog;
+    }
+
+    /**
+     * 下拉框
+     *
+     * @param context
+     * @param typeList 要显示的内容
+     * @param view     弹出框大小和显示的地方
+     * @return
+     */
+    private PopupWindow createPopupWindow(Context context, List<Map<String, String>> typeList, View view, int no, int widip) {
+        this.no = no;
+        dismissPop();
+        View contentView = LayoutInflater.from(context).inflate(
+                R.layout.view_listpopupwindow, null);
+//		popupWindow = new PopupWindow(contentView, view.getWidth(),
+//				LayoutParams.WRAP_CONTENT);
+        popupWindow = new PopupWindow(contentView, widip > 0 ? widip : view.getWidth(),
+                LayoutParams.WRAP_CONTENT);
+        popupWindow.setContentView(contentView);
+
+        TextView textView = (TextView) contentView
+                .findViewById(R.id.tv_popup_title);
+        textView.setText("测试");
+        ListView listView = (ListView) contentView
+                .findViewById(R.id.list_popup);
+        PopupAdapter popAdapter = new PopupAdapter(typeList, context);
+        if (iscenshow) {
+            TextView tv_popup_title = (TextView) contentView.findViewById(R.id.tv_popup_title);
+            tv_popup_title.setVisibility(View.VISIBLE);
+            tv_popup_title.setOnClickListener(new OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    // TODO Auto-generated method stub
+                    dismissPop();
+                }
+            });
+        }
+        listView.setAdapter(popAdapter);
+        popupWindow.setBackgroundDrawable(new BitmapDrawable());
+        popupWindow.setFocusable(true);
+        popupWindow.setOutsideTouchable(true);
+        popupWindow.showAsDropDown(view);
+        return popupWindow;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * 显示在某个控件上面的pop窗口
+     * @param context
+     * @param typeList 显示数据
+     * @param view 显示在那个控件上
+     * @param no 返回标识
+     * @param widip pop窗口的宽度，传0的话宽度等于view的宽度
+     * @return
+     */
+    public PopupWindow createPopupWindowTop(Context context, List<Map<String, String>> typeList, View view, int no, int widip) {
+        this.no = no;
+        dismissPop();
+        View contentView = LayoutInflater.from(context).inflate(
+                R.layout.view_listpopupwindow, null);
+        popupWindow = new PopupWindow(contentView, widip > 0 ? widip : view.getWidth(),
+                LayoutParams.WRAP_CONTENT);
+        popupWindow.setContentView(contentView);
+//		popupWindow.setBackgroundDrawable(null);
+        ListView listView = (ListView) contentView
+                .findViewById(R.id.list_popup);
+        if (iscenshow) {
+            TextView tv_popup_title = (TextView) contentView.findViewById(R.id.tv_popup_title);
+            tv_popup_title.setVisibility(View.VISIBLE);
+            tv_popup_title.setOnClickListener(new OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    // TODO Auto-generated method stub
+                    dismissPop();
+                }
+            });
+        }
+        PopupAdapter popAdapter = new PopupAdapter(typeList, context);
+
+        listView.setAdapter(popAdapter);
+        popupWindow.setBackgroundDrawable(new BitmapDrawable());
+        popupWindow.setFocusable(true);
+        popupWindow.setOutsideTouchable(true);
+//		popupWindow.showAsDropDown(view);
+        int[] location = new int[2];
+        view.getLocationOnScreen(location);
+        contentView.measure(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED);
+        int h = view.getHeight();
+        int ph = contentView.getMeasuredHeight();
+        popupWindow.showAtLocation(view, Gravity.NO_GRAVITY, location[0], location[1] - h - ph);
+        return popupWindow;
+    }
+
+    /**
+     * 加载pop窗口
+     *
+     * @param context
+     * @param typeList
+     * @param view
+     * @param no
+     * @param widip
+     * @param deviation
+     * @param type
+     * @return
+     */
+    public PopupWindow createPopupWindow(Context context, List<Map<String, String>> typeList, View view, int no, int widip, int type) {
+        ScreenTools screenTools = ScreenTools.instance(context);
+        int totalWidth = screenTools.dip2px(widip);
+        if (type == POPWIN_TOP) {
+            return createPopupWindowTop(context, typeList, view, no, totalWidth);
+        } else {
+            return createPopupWindow(context, typeList, view, no, totalWidth);
+        }
+    }
+
+    public PopupWindow createPopupWindow(Context context, List<Map<String, String>> typeList, View view, int no) {
+        return createPopupWindow(context, typeList, view, no, 0, 0);
+    }
+
+
+    /**
+     * 横向
+     *
+     * @param context
+     * @param Parent
+     * @param showView
+     * @return
+     */
+    public PopupWindow createPopupWindow(Context context, View Parent, View showView) {
+        dismissPop();
+        popupWindow = new PopupWindow(showView, LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT);
+        popupWindow.setContentView(showView);
+        popupWindow.setBackgroundDrawable(new PaintDrawable());
+        popupWindow.setFocusable(true);
+        popupWindow.setOutsideTouchable(true);
+        int[] location = new int[2];
+        Parent.getLocationOnScreen(location);
+        int w = Parent.getWidth() * 2;
+        popupWindow.showAtLocation(Parent, Gravity.NO_GRAVITY, location[0] - w, location[1]);
+
+        return popupWindow;
+    }
+
+    /**
+     * 自定义viewPopup
+     * @param context
+     * @param Parent
+     * @param showView
+     * @return
+     */
+    public PopupWindow createViewPopupWindow(Context context, View Parent, View showView) {
+        dismissPop();
+        popupWindow = new PopupWindow(showView, LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT);
+        popupWindow.setContentView(showView);
+        popupWindow.setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+        popupWindow.setFocusable(true);
+        popupWindow.setOutsideTouchable(true);
+        popupWindow.showAsDropDown(Parent);
+        return popupWindow;
+    }
+
+    public void dismissPop() {
+        if (popupWindow != null && popupWindow.isShowing()) {
+            popupWindow.dismiss();
+            popupWindow = null;
+        }
+    }
+
+    public void setOnPopupItemClickListener(AdapterInterface adap) {
+        this.aif = adap;
+    }
+
+    class PopupAdapter extends BaseAdapter {
+        List<Map<String, String>> data;
+        LayoutInflater inflator;
+        Context context;
+        OnClickListener onPopupItemClickListener;
+
+        public PopupAdapter(List<Map<String, String>> data, Context context) {
+            super();
+            this.data = data;
+            this.context = context;
+            inflator = LayoutInflater.from(context);
+        }
+
+        public PopupAdapter() {
+            super();
+        }
+
+        @Override
+        public int getCount() {
+            return data.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return data.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(final int position, View view, ViewGroup viewGroup) {
+//			HashMap<String, String> map = (HashMap<String, String>) getItem(position);
+            view = inflator.inflate(R.layout.item_list_popwindow, null);
+            TextView tv = (TextView) view.findViewById(R.id.tv_name);
+            if(isCen)
+                tv.setGravity(Gravity.CENTER);
+            tv.setText(data.get(position).get(name.length() > 0 ? name : "name"));
+            view.setTag(data.get(position));
+
+            view.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    closeDialog();
+                    dismissPop();
+                    if (aif != null)
+                        aif.Click(data.get(position), no);
+                }
+            });
+            return view;
+        }
+
+    }
+
+    /**
+     * tos提示框
+     *
+     * @param msg
+     */
+    public static void showTextToast(String msg, Context context) {
+        if (toast == null) {
+            toast = Toast.makeText(context, msg, Toast.LENGTH_SHORT);
+        } else {
+            toast.setText(msg);
+        }
+        toast.show();
+    }
+
+    /**
+     * 传入自定义确认框布局
+     * 传入自定义布局，但是必须有 内容控件content,取消控件cancel,确认confirm
+     * @param layoutId
+     */
+    public static void setChoiceDialogCustom(int layoutId_){
+        layoutId = layoutId_;
+    }
+
+    /**
+     * 提示确认框
+     *
+     * @param context
+     * @param choCen  提示内容
+     * @param cen1    第一个按键名称(传null为取消)
+     * @param cen2    第二个按键名称(传null为确定)
+     * @param on1     第一个键点击事件(传null为关闭窗口)
+     * @param on2     第二个键点击事件(传null为关闭窗口)
+     * @return
+     */
+    public static Dialog createChoiceDialog(Context context, String choCen, String cen1, String cen2, OnClickListener on1, OnClickListener on2) {
+        dialog = new Dialog(context, R.style.mDialogB);
+        LayoutInflater li = LayoutInflater.from(context);
+        //如果有自定义页面，加载自定义
+        View view = li.inflate(layoutId!=0?layoutId:R.layout.prompt, null);
+        TextView cen = (TextView) view.findViewById(R.id.content);
+        TextView qugg = (TextView) view.findViewById(R.id.cancel);
+        TextView queren = (TextView) view.findViewById(R.id.confirm);
+        TextView title = (TextView) view.findViewById(R.id.title);
+        if (oneTxtColor != 0)
+            qugg.setTextColor(oneTxtColor);
+        if (twoTxtColor != 0)
+            queren.setTextColor(twoTxtColor);
+        cen.setText(choCen);
+        if (cen1 != null)
+            qugg.setText(cen1);
+        if (cen2 != null)
+            queren.setText(cen2);
+
+        if (on1 != null) {
+            qugg.setOnClickListener(on1);
+        } else {
+            qugg.setOnClickListener(new OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    // TODO Auto-generated method stub
+                    closeDialog();
+                }
+            });
+        }
+        if (on2 != null) {
+            queren.setOnClickListener(on2);
+        } else {
+            queren.setOnClickListener(new OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    // TODO Auto-generated method stub
+                    closeDialog();
+                }
+            });
+        }
+        //设置标题
+        if(title!=null&&titleString!=null&&titleString.length()>0){
+            title.setText(titleString);
+        }
+        titleString = "";
+        try {
+            dialog.setContentView(view);
+            dialog.setCancelable(true);
+//			if(isMainActivityAlive(context))
+            dialog.show();
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return dialog;
+    }
+
+    /**
+     * 提示确认框
+     *
+     * @param context
+     * @param choCen  提示内容
+     * @param cen1    第一个按键名称(传null为取消)
+     * @param on1     第一个键点击事件(传null为关闭窗口)
+     * @return
+     */
+    public static Dialog createChoiceOneDialog(Context context, String choCen, String cen1, OnClickListener on1) {
+        dialog = new Dialog(context, R.style.mDialogB);
+        LayoutInflater li = LayoutInflater.from(context);
+        View view = li.inflate(layoutId!=0?layoutId:R.layout.prompt, null);
+        TextView cen = (TextView) view.findViewById(R.id.content);
+        TextView qugg = (TextView) view.findViewById(R.id.cancel);
+        TextView queren = (TextView) view.findViewById(R.id.confirm);
+        TextView title = (TextView) view.findViewById(R.id.title);
+        qugg.setVisibility(View.GONE);
+        cen.setText(choCen);
+        if (cen1 != null)
+            queren.setText(cen1);
+
+        if (on1 != null) {
+            queren.setOnClickListener(on1);
+        } else {
+            queren.setOnClickListener(new OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    // TODO Auto-generated method stub
+                    closeDialog();
+                }
+            });
+        }
+        //设置标题
+        if(title!=null&&titleString!=null&&titleString.length()>0){
+            title.setText(titleString);
+        }
+        titleString = "";
+        dialog.setContentView(view);
+        dialog.setCancelable(true);
+        dialog.show();
+        return dialog;
+    }
+
+    /**
+     * 显示自定义弹出框
+     */
+    public void showCustom(Activity context, View view) {
+        dialog = new Dialog(context, R.style.shareDialogTheme);
+        dialog.setContentView(view);
+        dialog.setCancelable(true);
+//		Window dialogWindow = dialog.getWindow();
+//        dialogWindow.setGravity(gravity);
+        dialog.setCanceledOnTouchOutside(true);
+        dialog.show();
+    }
+
+    /**
+     * 列表提示框
+     * @param context
+     * @param typeList
+     * @param no
+     */
+    public void showListDialog(Context context,List<Map<String, String>> typeList, int no) {
+        this.no = no;
+        View contentView = LayoutInflater.from(context).inflate(
+                R.layout.dio_list, null);
+        ListView listView = (ListView) contentView.findViewById(R.id.list_popup);
+        isCen = true;
+        PopupAdapter popAdapter = new PopupAdapter(typeList, context);
+        if (iscenshow) {
+            TextView tv_popup_title = (TextView) contentView.findViewById(R.id.tv_popup_title);
+            tv_popup_title.setVisibility(View.VISIBLE);
+            tv_popup_title.setOnClickListener(new OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    // TODO Auto-generated method stub
+                    dialog.dismiss();
+                }
+            });
+        }
+        listView.setAdapter(popAdapter);
+        dialog = new Dialog(context, R.style.mDialogB);
+        dialog.setContentView(contentView);
+        dialog.setCancelable(true);
+        dialog.show();
+    }
+
+    /**
+     * 关闭确认提示框
+     */
+    public static void closeDialog() {
+        if (dialog != null) {
+            dialog.dismiss();
+            dialog = null;
+        }
+    }
+
+    /**
+     * 让窗口不能关闭
+     */
+    public static void isRtu() {
+//		dialog.setOnKeyListener(keylistener);
+        if (dialog != null)
+            dialog.setCancelable(false);
+//			showTextToast("提示框为空", con);
+    }
+
+    static OnKeyListener keylistener = new DialogInterface.OnKeyListener() {
+        public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+            if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    };
+
+    /**
+     * 设置pop窗口显示取消
+     * @param iscenshow
+     */
+    public void setIsCenshow(boolean iscenshow){
+        this.iscenshow = iscenshow;
+    }
+
+    /**
+     * 判断MainActivity是否活动
+     * @param context 一个context
+     * @param activityName 要判断Activity
+     * @return boolean
+     */
+//    private boolean isMainActivityAlive(Context context, String activityName){
+//       ActivityManager am = (ActivityManager)context.getSystemService(Context.ACTIVITY_SERVICE);
+//       List<ActivityManager.RunningTaskInfo> list = am.getRunningTasks(100);
+//       for (ActivityManager.RunningTaskInfo info : list) {
+//           // 注意这里的 topActivity 包含 packageName和className，可以打印出来看看
+//           if (info.topActivity.toString().equals(activityName) || info.baseActivity.toString().equals(activityName)) {
+////               Log.i(TAG,info.topActivity.getPackageName() + " info.baseActivity.getPackageName()="+info.baseActivity.getPackageName());
+//               return true;
+//           }
+//       }
+//       return false;
+//    }
+}

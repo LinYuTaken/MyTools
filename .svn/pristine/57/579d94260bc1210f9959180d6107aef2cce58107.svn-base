@@ -1,0 +1,33 @@
+package com.example.config;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import android.app.Activity;
+import android.content.Context;
+
+public class Data {
+	/**
+	 * 注册信息
+	 */
+	public static Map<String,Object> zhuc = new HashMap<String, Object>();
+	public static Map<String,String> xinxi = new HashMap<String, String>();
+	/**
+	 * 经度
+	 */
+	public static double jindu = 0.0;
+	/**
+	 * 纬度
+	 */
+	public static double weidu = 0.0;
+	/**
+	 * 地址
+	 */
+	public static String dizhi = "";
+
+	public static List<Activity> acs = new  ArrayList<Activity>();
+
+	public static boolean ishua = true;
+}

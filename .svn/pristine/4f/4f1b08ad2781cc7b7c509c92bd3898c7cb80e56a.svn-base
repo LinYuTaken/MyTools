@@ -1,0 +1,602 @@
+package com.sy.mobile.control;
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.example.tools.R;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.sy.mobile.picture.ImagePagerActivity;
+import com.sy.mobile.picture.SelectPicture;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.graphics.Color;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
+import android.util.AttributeSet;
+import android.util.DisplayMetrics;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.View.MeasureSpec;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup.MarginLayoutParams;
+import android.widget.BaseAdapter;
+import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.AbsListView.LayoutParams;
+
+/**
+ * 选择图片控件
+ *
+ * @author admin
+ *
+ */
+public class SelectPicShow extends GridView {
+	Activity context;
+	// 选择的图片路径
+	List<Map<String, String>> fileList = new ArrayList<Map<String, String>>();
+	SelectPicAdapter spa;
+	// 图片最大选择数量
+	int maxSelect;
+	/**
+	 * 删除图标
+	 */
+	int deleteioc;
+	/**
+	 * 添加图标
+	 */
+	int addioc;
+	/**
+	 * 图片大小W
+	 */
+	int imageViewW;
+	/**
+	 * 图片大小H
+	 */
+	int imageViewH;
+
+	/**
+	 * 图片大小W
+	 */
+	int deleteViewW;
+	/**
+	 * 图片大小H
+	 */
+	int deleteViewH;
+
+	/**
+	 * 外网图片地址
+	 */
+	String url = "";
+
+	/**
+	 * 外网图片name
+	 */
+	String urlName = "";
+	SelectPicture sp = new SelectPicture();
+
+	public SelectPicShow(Context context) {
+		super(context);
+		// TODO Auto-generated constructor stub
+	}
+
+	public SelectPicShow(Context context, AttributeSet attrs) {
+		super(context, attrs);
+		// TODO Auto-generated constructor stub
+	}
+
+	public SelectPicShow(Context context, AttributeSet attrs, int defStyle) {
+		super(context, attrs, defStyle);
+		// TODO Auto-generated constructor stub
+	}
+
+	/**
+	 * 初始化
+	 *
+	 * @param context
+	 * @param maxSelect
+	 *            最大图片数
+	 */
+	public void inten(Activity context, int maxSelect) {
+		List<Map<String, String>> list = new ArrayList<Map<String, String>>();
+		list.add(new HashMap<String, String>());
+		this.context = context;
+		this.maxSelect = maxSelect;
+		spa = new SelectPicAdapter(context, list);
+		setAdapter(spa);
+		sp.setAlbums(true);
+		sp.setMaxNumber(this.maxSelect);
+	}
+
+	/**
+	 * 返回选择的图片路径
+	 *
+	 * @return
+	 */
+	public List<Map<String, String>> getPicList() {
+		List<Map<String, String>> testList = new ArrayList<Map<String, String>>();
+		for (int i = 0; i < spa.getList().size(); i++) {
+			//只有name的是选择的图片
+			Map<String,String> map = spa.getList().get(i);
+			if(map.get("name")!=null&&map.get("name").length()>0){
+				testList.add(map);
+			}
+		}
+//		testList.addAll(spa.getList());
+//		testList.remove(testList.size() - 1);
+		return testList;
+	}
+
+	/**
+	 * 返回网络图片路径
+	 *
+	 * @return
+	 */
+	public List<Map<String, String>> getUrlPicList() {
+		List<Map<String, String>> testList = new ArrayList<Map<String, String>>();
+		for (int i = 0; i < spa.getList().size(); i++) {
+			//只有判断网络图片
+			Map<String,String> map = spa.getList().get(i);
+			if(urlName.length()>0&&map.get(urlName)!=null&&map.get(urlName).length()>0){
+				testList.add(map);
+			}
+		}
+		return testList;
+	}
+
+	/**
+	 * 设置删除图标
+	 */
+	public void setdeleteIoc(int deleteioc) {
+		this.deleteioc = deleteioc;
+		if (spa != null) {
+			spa.notifyDataSetChanged();
+		}
+	}
+
+	/**
+	 * 设置添加图标
+	 */
+	public void addIoc(int addioc) {
+		this.addioc = addioc;
+		if (spa != null) {
+			spa.notifyDataSetChanged();
+		}
+	}
+
+	/**
+	 * 设置图片宽高
+	 *
+	 * @param imageViewW
+	 * @param imageViewH
+	 */
+	public void setImageWH(int imageViewW, int imageViewH) {
+		this.imageViewW = imageViewW;
+		this.imageViewH = imageViewH;
+		if (spa != null) {
+			spa.notifyDataSetChanged();
+		}
+	}
+
+	/**
+	 * 设置图片宽高
+	 *
+	 * @param imageViewW
+	 * @param imageViewH
+	 */
+	public void setDeleteWH(int deleteViewW, int deleteViewH) {
+		this.deleteViewW = deleteViewW;
+		this.deleteViewH = deleteViewH;
+		if (spa != null) {
+			spa.notifyDataSetChanged();
+		}
+	}
+
+	/**
+	 * 设置外网
+	 * @param url
+	 */
+	public void setUrl(String url){
+		this.url = url;
+	}
+
+	/**
+	 * 设置外网图片name
+	 * @param url
+	 */
+	public void setrlName(String urlName){
+		this.urlName = urlName;
+	}
+
+	/**
+	 * 添加图片路径
+	 *
+	 * @param data
+	 * @param type
+	 */
+	public void addPicList(Intent data, int type) {
+//		if (data == null && type != SelectPicture.CAMERA_WITH_DATA)
+//			return;
+		String file = sp.getStrImgPath(data, type);
+//		if (file == null)
+//			return;
+//		int du = readPictureDegree(file);
+//		if (du != 0) {
+//			file = rotaingImageView(du, file);
+//		}
+		if(file!=null&&file.length()>1){
+			//如果有多个，循环添加
+			if(file.contains(",")){
+				String[] str = file.split(",");
+				List<Map<String,String>> list = new ArrayList<Map<String,String>>();
+				for (int i = 0; i < str.length; i++) {
+					Map<String,String> map = new HashMap<String, String>();
+					map.put("name", str[i]);
+					spa.addLieno(map);
+				}
+				spa.notifyDataSetChanged();
+			}else{
+				Map<String, String> map = new HashMap<String, String>();
+				map.put("name", file);
+				spa.addLie(map);
+			}
+		}
+	}
+
+	/**
+	 * 添加网络图片
+	 * @param list
+	 */
+	public void addUrlPicList(List<Map<String,String>> urlList){
+		if(urlList==null||urlList.size()==0)
+			return;
+		for (int i = 0; i < urlList.size(); i++) {
+			spa.addLieno(urlList.get(i));
+		}
+		spa.notifyDataSetChanged();
+	}
+
+	class SelectPicAdapter extends BaseAdapter {
+		LayoutInflater mInf;
+		List<Map<String, String>> list;
+		Activity context;
+
+		public SelectPicAdapter(Activity context, List<Map<String, String>> list) {
+			mInf = LayoutInflater.from(context);
+			this.list = list;
+			this.context = context;
+		}
+
+		@Override
+		public int getCount() {
+			// TODO Auto-generated method stub
+			return list.size();
+		}
+
+		@Override
+		public Object getItem(int position) {
+			// TODO Auto-generated method stub
+			return list.get(position);
+		}
+
+		@Override
+		public long getItemId(int position) {
+			// TODO Auto-generated method stub
+			return position;
+		}
+
+		@Override
+		public int getViewTypeCount() {
+			// TODO Auto-generated method stub
+			return 2;
+		}
+
+		@Override
+		public int getItemViewType(int position) {
+			// TODO Auto-generated method stub
+			int i = 0;
+			if (list.get(position).size() == 0) {
+				i = 0;
+			} else {
+				i = 1;
+			}
+			return i;
+		}
+
+		@Override
+		public View getView(final int position, View convertView,
+							ViewGroup parent) {
+			// TODO Auto-generated method stub
+			final Map<String, String> map = list.get(position);
+			Holder holder = null;
+			HolderAdd holderadd = null;
+			if (convertView == null) {
+				// 判断是加载添加布局还是加载图片
+				if (getItemViewType(position) == 0) {
+					holderadd = new HolderAdd();
+					convertView = mInf
+							.inflate(R.layout.selectpic_itemadd, null);
+					holderadd.adds = (ImageView) convertView
+							.findViewById(R.id.add);
+
+					// 如果自定义了添加图片加载
+					if (addioc != 0) {
+						holderadd.adds.setImageResource(addioc);
+					}
+					// 如果图片宽高不是0修改图片宽高
+					if (imageViewW != 0 && imageViewH != 0)
+						setViewWH(holderadd.adds, imageViewW, imageViewH);
+					convertView.setTag(holderadd);
+				} else {
+					holder = new Holder();
+					convertView = mInf.inflate(R.layout.selectpic_item, null);
+					holder.add = (ImageView) convertView.findViewById(R.id.add);
+					holder.qudiao = (ImageView) convertView
+							.findViewById(R.id.quxiao);
+
+					// 如果自定义了删除图片加载
+					if (deleteioc != 0)
+						holder.qudiao.setImageResource(deleteioc);
+					// 如果图片宽高不是0修改图片宽高
+					if (imageViewW != 0 && imageViewH != 0)
+						setViewWH(holder.add, imageViewW, imageViewH);
+					// 如果删除按钮宽高不是0修改删除宽高
+					if (deleteViewW != 0 && deleteViewH != 0)
+						setViewWH(holder.qudiao, imageViewW, imageViewH);
+					convertView.setTag(holder);
+				}
+			} else {
+				if (getItemViewType(position) == 0)
+					holderadd = (HolderAdd) convertView.getTag();
+				else
+					holder = (Holder) convertView.getTag();
+			}
+			// 如果是图片布局显示图片 设置删除按钮
+			if (getItemViewType(position) != 0) {
+				//如果是网络图片,加载网络图片
+				if(urlName.length()>0&&map.get(urlName)!=null&&map.get(urlName).length()>0){
+					ImageLoader.getInstance().displayImage(
+							url + map.get(urlName), holder.add);
+				}else{
+					ImageLoader.getInstance().displayImage(
+							"file://" + map.get("name"), holder.add);
+				}
+				holder.add.setOnClickListener(null);
+				holder.qudiao.setOnClickListener(new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						list.remove(position);
+						notifyDataSetChanged();
+					}
+				});
+				holder.add.setOnClickListener(new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						showPic(list, position);
+						// ImageLoader.getInstance().clearMemoryCache();
+						// notifyDataSetChanged();
+					}
+				});
+			} else {
+				// 如果到了设定的最大选择图数就隐藏添加按钮
+				if (list.size() == maxSelect + 1)
+					holderadd.adds.setVisibility(View.GONE);
+				else
+					holderadd.adds.setVisibility(View.VISIBLE);
+				// 如果是添加图片布局设置添加事件
+				holderadd.adds.setOnClickListener(new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						sp.setMaxNumber(maxSelect - (list.size()-1));
+						sp.showPictureSelect(context);
+					}
+				});
+			}
+
+			return convertView;
+		}
+
+		class Holder {
+			ImageView add, qudiao;
+		}
+
+		class HolderAdd {
+			ImageView adds;
+		}
+
+		/**
+		 * 添加列
+		 */
+		public void addLie(List<Map<String, String>> list) {
+			this.list.addAll(list);
+			notifyDataSetChanged();
+		}
+
+		/**
+		 * 添加列
+		 *
+		 * @param map
+		 */
+		public void addLie(Map<String, String> map) {
+			this.list.add(list.size() - 1, map);
+			notifyDataSetChanged();
+		}
+
+		/**
+		 * 添加列
+		 *
+		 * @param map
+		 */
+		public void addLieno(Map<String, String> map) {
+			this.list.add(list.size() - 1, map);
+		}
+
+		/**
+		 * list赋值
+		 */
+		public void assLie(List<Map<String, String>> list) {
+			this.list = list;
+			notifyDataSetChanged();
+		}
+
+		/**
+		 * 删除列
+		 */
+		public void revem() {
+			list.clear();
+		}
+
+		public List<Map<String, String>> getList() {
+			return list;
+		}
+	}
+
+	/**
+	 * 显示图片详情
+	 */
+	private void showPic(List<Map<String, String>> pictures, int index) {
+		// if(pictures.size()>1){
+		// pictures.remove(pictures.size()-1);
+		// }
+		String[] tturl = new String[pictures.size() - 1];
+		for (int i = 0; i < pictures.size() - 1; i++) {
+			Map<String,String> map = pictures.get(i);
+			if(urlName.length()>0&&map.get(urlName)!=null&&map.get(urlName).length()>0){
+				tturl[i] = url + map.get(urlName);
+			}else{
+				tturl[i] = "file://" + map.get("name");
+			}
+
+		}
+		Intent intent = new Intent();
+		intent.setClass(context, ImagePagerActivity.class);
+		// 传入图片路径数组
+		intent.putExtra(ImagePagerActivity.EXTRA_IMAGE_URLS, tturl);
+		// 传入要显示第几张图
+		intent.putExtra(ImagePagerActivity.EXTRA_IMAGE_INDEX, index);
+		context.startActivity(intent);
+	}
+
+	/**
+	 * 读取图片属性：旋转的角度
+	 *
+	 * @param path
+	 *            图片绝对路径
+	 * @return degree旋转的角度
+	 */
+	public static int readPictureDegree(String path) {
+		int degree = 0;
+		try {
+			ExifInterface exifInterface = new ExifInterface(path);
+			int orientation = exifInterface.getAttributeInt(
+					ExifInterface.TAG_ORIENTATION,
+					ExifInterface.ORIENTATION_NORMAL);
+			switch (orientation) {
+				case ExifInterface.ORIENTATION_ROTATE_90:
+					degree = 90;
+					break;
+				case ExifInterface.ORIENTATION_ROTATE_180:
+					degree = 180;
+					break;
+				case ExifInterface.ORIENTATION_ROTATE_270:
+					degree = 270;
+					break;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return degree;
+	}
+
+	/*
+	 * 旋转图片
+	 *
+	 * @param angle
+	 *
+	 * @param bitmap
+	 *
+	 * @return Bitmap
+	 */
+	public static String rotaingImageView(int angle, String fele) {
+		String feile = "";
+		Bitmap bitmap = ImageLoader.getInstance().loadImageSync(
+				"file://" + fele);
+		// Imagelo
+		// 旋转图片 动作
+		Matrix matrix = new Matrix();
+		matrix.postRotate(angle);
+		// System.out.println("angle2=" + angle);
+		// 创建新的图片
+		if (bitmap != null) {
+			StringBuffer stringBuffer = new StringBuffer(fele);
+			feile = stringBuffer.insert(fele.indexOf("."), "test").toString();
+			Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, 0, 0,
+					bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+			saveBitmap2file(resizedBitmap, feile);
+		}
+		return feile;
+	}
+
+	static boolean saveBitmap2file(Bitmap bmp, String filename) {
+		CompressFormat format = Bitmap.CompressFormat.JPEG;
+		int quality = 100;
+		OutputStream stream = null;
+		try {
+			stream = new FileOutputStream(filename);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return bmp.compress(format, quality, stream);
+	}
+
+	private void setViewWH(View view, int W, int H) {
+		// 获取密度
+		DisplayMetrics dm = new DisplayMetrics();
+		context.getWindowManager().getDefaultDisplay().getMetrics(dm);
+		MarginLayoutParams headerLayoutParams = (MarginLayoutParams) view
+				.getLayoutParams();
+		headerLayoutParams.height = (int) (H * dm.density);
+		headerLayoutParams.width = (int) (W * dm.density);
+		view.setLayoutParams(headerLayoutParams);
+	}
+
+	@Override
+	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+		int heightSpec;
+
+
+		if (getLayoutParams().height == LayoutParams.WRAP_CONTENT) {
+			// The great Android "hackatlon", the love, the magic.
+			// The two leftmost bits in the height measure spec have
+			// a special meaning, hence we can't use them to describe height.
+			heightSpec = MeasureSpec.makeMeasureSpec(
+					Integer.MAX_VALUE >> 2, MeasureSpec.AT_MOST);
+		}
+		else {
+			// Any other height should be respected as is.
+			heightSpec = heightMeasureSpec;
+		}
+
+
+		super.onMeasure(widthMeasureSpec, heightSpec);
+	}
+}

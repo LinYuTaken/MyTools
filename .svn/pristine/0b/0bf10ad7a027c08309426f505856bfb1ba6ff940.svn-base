@@ -1,0 +1,27 @@
+#Wed Sep 27 16:26:38 CST 2017
+eclipse.preferences.version=1
+encoding//src/com/cll/Listview/DragListViewListener.java=UTF-8
+encoding//src/com/lin/mobile/album/ImageSelectActivity.java=UTF-8
+encoding//src/com/lin/mobile/album/Picker.java=UTF-8
+encoding//src/com/lin/mobile/album/SelectionSpec.java=UTF-8
+encoding//src/com/lin/mobile/calendar/CalendarShow.java=UTF-8
+encoding//src/com/lin/mobile/share/AndroidShare.java=UTF-8
+encoding//src/com/mining/app/zxing/decoding/CaptureActivityHandler.java=UTF-8
+encoding//src/com/sy/mobile/analytical/ApiSpeech.java=UTF-8
+encoding//src/com/sy/mobile/analytical/Config.java=UTF-8
+encoding//src/com/sy/mobile/analytical/ScreenTools.java=UTF-8
+encoding//src/com/sy/mobile/control/Accordinglayout.java=UTF-8
+encoding//src/com/sy/mobile/control/ChangeColorIconWithTextView.java=UTF-8
+encoding//src/com/sy/mobile/control/CustomImageView.java=UTF-8
+encoding//src/com/sy/mobile/control/NineGridlayout.java=UTF-8
+encoding//src/com/sy/mobile/control/RefreshableView.java=UTF-8
+encoding//src/com/sy/mobile/control/SlidingMenu.java=UTF-8
+encoding//src/com/sy/mobile/picture/HackyViewPager.java=UTF-8
+encoding//src/com/sy/mobile/picture/ImageDetailFragment.java=UTF-8
+encoding//src/com/sy/mobile/picture/ImagePagerActivity.java=UTF-8
+encoding//src/com/sy/mobile/upgrade/UpdateManager.java=UTF-8
+encoding//src/com/tool/pay/PayDemoActivity.java=UTF-8
+encoding//src/com/widget/time/JudgeDate.java=UTF-8
+encoding//src/com/widget/time/WheelView.java=GBK
+encoding//src/net/sourceforge/simcpux=UTF-8
+encoding/<project>=gbk

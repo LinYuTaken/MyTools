@@ -1,0 +1,49 @@
+package com.example.tools;
+
+import java.util.HashMap;
+import java.util.Map;
+
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+
+
+public class ToolsMainActivity extends Activity {
+
+	//	@Override
+//	protected void onCreate(Bundle savedInstanceState) {
+//		super.onCreate(savedInstanceState);
+//		setContentView(R.layout.activity_main);
+	//实例化http类 域名最好弄成方便修改的变量
+//		HttpDream http = new HttpDream("http://www.weitingsoft.com:88/tests/",this);
+//		//添加要传入的参数
+//		Map<String,String> map = new HashMap<String, String>();
+//		map.put("zhanghao", "18982414967");
+//		map.put("mima","2508262");
+//		//开始获取数据
+//		http.getData("获取数据中..","huoqu", "Login.jsp", map, "get");
+//		//数据回调
+//		http.huidiao(new Cont() {
+//
+//			@Override
+//			public void content(Object content) {
+//				// TODO Auto-generated method stub
+//				//要执行的后续操作
+//			}
+//		});
+//	}
+	public String isnull(Object ob){
+		String is = "";
+		if(ob!=null){
+			is = ob.toString();
+		}
+		int i = is.indexOf(".0");
+		if(i>0){
+			is = is.substring(0,i);
+		}
+		return is;
+	}
+}

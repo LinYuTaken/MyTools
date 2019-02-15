@@ -1,0 +1,61 @@
+package com.lin.mobile.entity;
+
+import android.content.Intent;
+import android.support.v4.app.Fragment;
+
+/**
+ * 导航条实体类
+ * @author admin
+ *
+ */
+public class Navig {
+	//略缩图地址
+	String imageurlThumbnail;
+	//图片地址
+	String imageurl;
+	//点击是否跳转页面
+	boolean isIntent;
+	//需要跳转的页面
+	Intent intent;
+	//图片的名字
+	String imageName;
+	//碎片
+	Fragment fragment;
+
+	public Fragment getFragment() {
+		return fragment;
+	}
+	public void setFragment(Fragment fragment) {
+		this.fragment = fragment;
+	}
+	public String getImageName() {
+		return imageName;
+	}
+	public void setImageName(String imageName) {
+		this.imageName = imageName;
+	}
+	public String getImageurl() {
+		return imageurl;
+	}
+	public void setImageurl(String imageurl) {
+		this.imageurl = imageurl;
+	}
+	public boolean isIntent() {
+		return isIntent;
+	}
+	public void setIntent(boolean isIntent) {
+		this.isIntent = isIntent;
+	}
+	public Intent getIntent() {
+		return intent;
+	}
+	public void setIntent(Intent intent) {
+		this.intent = intent;
+	}
+	public String getImageurlThumbnail() {
+		return imageurlThumbnail;
+	}
+	public void setImageurlThumbnail(String imageurlThumbnail) {
+		this.imageurlThumbnail = imageurlThumbnail;
+	}
+}

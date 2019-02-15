@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/homeonl"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/homeioc"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="5dp"
+        android:src="@drawable/qq" />
+
+    <TextView
+        android:id="@+id/homemess"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/homeioc"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="2dp"
+        android:text="内容"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/homesum"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/homeioc"
+        android:layout_marginLeft="20dp"
+        android:background="@drawable/tool_red_h"
+        android:gravity="center"
+        android:paddingLeft="4dp"
+        android:paddingRight="4dp"
+        android:text="9"
+        android:visibility="gone"
+        android:singleLine="true"
+        android:textColor="@color/white"
+        android:textSize="11dp" />
+</RelativeLayout>

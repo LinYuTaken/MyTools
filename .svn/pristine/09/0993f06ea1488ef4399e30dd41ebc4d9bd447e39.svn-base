@@ -1,0 +1,354 @@
+package com.sy.mobile.control;
+
+import android.app.Activity;
+import android.content.Context;
+import android.graphics.Color;
+import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import com.example.g.MyBaseAdapter;
+import com.example.tools.R;
+import com.lin.mobile.entity.DateSelect;
+import com.sy.mobile.analytical.ScreenTools;
+import com.wxample.data.MyData;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 时间选择
+ * Created by admin on 2017/12/5.
+ */
+
+public class DateSelection extends LinearLayout {
+    GridView gridView1;
+    Calendar calendarDate;
+    ScreenTools screentools;
+    //当前日历的时间
+    int year, month, date;
+
+    public static int LAST_MONTH = 0;
+    public static int NEXT_MONTH = 1;
+    public static int THIS_MONTH = 2;
+
+    Context context;
+    DateSelectionAdapter dateSelectionAdapter;
+    TextView timers;
+
+    Map<String,Boolean> celectMap = new HashMap<>();
+    /**
+     * 显示的日期
+     */
+    List<DateSelect> dateList = new ArrayList<>();
+    Button determine;
+
+    public DateSelection(Context context, AttributeSet attrs, int defStyle) {
+        this(context, attrs);
+    }
+
+    public DateSelection(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init(context, attrs);
+    }
+
+    public DateSelection(Context context) {
+        super(context);
+        init(context, null);
+    }
+
+    private void init(Context context, AttributeSet attrs) {
+        this.context = context;
+        LayoutInflater.from(context).inflate(R.layout.dateselection, this);
+        gridView1 = (GridView) findViewById(R.id.gridView1);
+        timers = (TextView) findViewById(R.id.timers);
+        determine = (Button) findViewById(R.id.determine);
+//        leftLayout = (RelativeLayout) findViewById(R.id.left_layout);
+//        leftImage = (ImageView) findViewById(R.id.left_image);
+//        rightLayout = (RelativeLayout) findViewById(R.id.right_layout);
+//        rightImage = (ImageView) findViewById(R.id.right_image);
+//        titleView = (TextView) findViewById(R.id.title);
+//        titleLayout = (RelativeLayout) findViewById(R.id.root);
+//        parseStyle(context, attrs);
+        findViewById(R.id.topm).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                topMonth();
+            }
+        });
+        findViewById(R.id.nextm).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                nextMonth();
+            }
+        });
+        findViewById(R.id.reset).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                celectMap.clear();
+                dateSelectionAdapter.notifyDataSetChanged();
+            }
+        });
+        dateSelectionAdapter = new DateSelectionAdapter(context,new ArrayList<DateSelect>());
+        gridView1.setAdapter(dateSelectionAdapter);
+//        showCalendar();
+    }
+
+    /**
+     * 显示时间
+     *
+     * @param container   容器
+     * @param currentDate 当前时间传null为当天
+     */
+    public void showCalendar() {
+        dateList.clear();
+        calendarDate = Calendar.getInstance();
+        screentools = ScreenTools.instance(context);
+        // 如果传入的时间不为空把时间传入
+        if (year == 0 && month == 0 && date == 0) {
+            year = calendarDate.get(Calendar.YEAR);
+            month = calendarDate.get(Calendar.MONTH);
+            date = calendarDate.get(Calendar.DATE);
+        } else {
+            calendarDate.set(Calendar.YEAR, year);
+            calendarDate.set(Calendar.MONTH, month);
+            calendarDate.set(Calendar.DATE, date);
+        }
+        // 获取当月总天数
+        int MaxDate = calendarDate.getActualMaximum(Calendar.DATE);
+        // 获取本月的第一天是星期几
+        int week = getWeek() - 1;
+        // 获取上月最后一天是几号
+        int lastDate = getPreviousMonthEnd();
+        // 加载上个月最后几天
+        for (int i = 0; i < week; i++) {
+            dateList.add(new DateSelect(0, 0, (lastDate - (week - (i + 1))), LAST_MONTH));
+        }
+        // 加载本月天数
+        for (int i = 0; i < MaxDate; i++) {
+            dateList.add(new DateSelect(year, month + 1, (i + 1), THIS_MONTH));
+        }
+        // 加载下个月开始几天
+        for (int i = 0; i < 42 - (MaxDate + week); i++) {
+            dateList.add(new DateSelect(0, 0, (i + 1), NEXT_MONTH));
+        }
+        dateSelectionAdapter.assLie(dateList);
+        timers.setText(year + "年" + getMonth() + "月");
+    }
+
+    class DateSelectionAdapter extends MyBaseAdapter<DateSelect> {
+
+        public DateSelectionAdapter(Context context, List<DateSelect> list) {
+            mInf = LayoutInflater.from(context);
+            this.list = list;
+//            this.context = context;
+        }
+
+        @Override
+        public int getCount() {
+            return list.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return list.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            final DateSelect map = list.get(position);
+
+            Holder holder = null;
+
+            if (convertView == null) {
+                holder = new Holder();
+                convertView = mInf.inflate(R.layout.tim_item, null);
+                holder.day = (TextView) convertView.findViewById(R.id.day);
+                convertView.setTag(holder);
+            } else {
+                holder = (Holder) convertView.getTag();
+            }
+            holder.day.setText(map.getDay()+"");
+            //时间
+            final String times = map.getYear()+ "-"+ MyData.stringFormat(map.getMonth(), "00")
+                    + "-"+ MyData.stringFormat(map.getDay(), "00");
+            if(map.getType() == LAST_MONTH){
+                holder.day.setTextColor(Color.parseColor("#CCCCCC"));
+                holder.day.setBackgroundDrawable(null);
+                holder.day.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        topMonth();
+                    }
+                });
+            }else if(map.getType() == THIS_MONTH){
+                if(celectMap.get(times)!=null&&celectMap.get(times)){
+                    holder.day.setTextColor(Color.parseColor("#ffffff"));
+                    holder.day.setBackgroundResource(R.drawable.jin);
+                    holder.day.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            celectMap.put(times,false);
+                            notifyDataSetChanged();
+                        }
+                    });
+                }else{
+                    holder.day.setTextColor(Color.parseColor("#666666"));
+                    holder.day.setBackgroundDrawable(null);
+                    holder.day.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            celectMap.put(times,true);
+                            notifyDataSetChanged();
+                        }
+                    });
+                }
+            }else if(map.getType() == NEXT_MONTH){
+                holder.day.setTextColor(Color.parseColor("#CCCCCC"));
+                holder.day.setBackgroundDrawable(null);
+                holder.day.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        nextMonth();
+                    }
+                });
+            }
+            return convertView;
+        }
+        class Holder {
+            TextView day;
+        }
+    }
+
+
+    /**
+     * 下一个月
+     */
+    public void nextMonth() {
+        if (month == 11) {
+            month = 0;
+            year++;
+        } else {
+            month++;
+        }
+        showCalendar();
+    }
+
+    /**
+     * 上一个月
+     */
+    public void topMonth() {
+        if (month == 0) {
+            month = 11;
+            year--;
+        } else {
+            month--;
+        }
+        showCalendar();
+    }
+
+    /**
+     * 重置时间
+     */
+    public void resetTime() {
+        year = 0;
+        month = 0;
+        date = 0;
+    }
+
+    /**
+     * 返回年份
+     *
+     * @return
+     */
+    public int getYear() {
+        return year;
+    }
+
+    /**
+     * 返回月份
+     *
+     * @return
+     */
+    public int getMonth() {
+        return month + 1;
+    }
+
+    /**
+     * 返回日期
+     *
+     * @return
+     */
+    public int getDa() {
+        return date;
+    }
+
+    /**
+     * 返回星期
+     *
+     * @return
+     */
+    private int getWeek() {
+        Calendar lastDate = calendarDate;
+        lastDate.set(Calendar.DATE, 1);// 设为当前月的1号
+        return lastDate.get(Calendar.DAY_OF_WEEK);
+    }
+
+    /**
+     * 上月最后一天
+     *
+     * @return
+     */
+    private int getPreviousMonthEnd() {
+        Calendar lastDate = calendarDate;
+        lastDate.add(Calendar.MONTH, -1);// 减一个月
+        lastDate.set(Calendar.DATE, 1);// 把日期设置为当月第一天
+        lastDate.roll(Calendar.DATE, -1);// 日期回滚一天，也就是本月最后一天
+        return lastDate.get(Calendar.DATE);
+    }
+
+    /**
+     * 本月最后一天是星期几
+     *
+     * @return
+     */
+    private int getDefaultDay() {
+
+        Calendar lastDate = calendarDate;
+        lastDate.set(Calendar.DATE, 1);// 设为当前月的1号
+        lastDate.add(Calendar.MONTH, 1);// 加一个月，变为下月的1号
+        lastDate.add(Calendar.DATE, -1);// 减去一天，变为当月最后一天
+
+        return lastDate.get(Calendar.DAY_OF_WEEK);
+    }
+
+    /**
+     * 返回选择的map
+     * @return
+     */
+    public Map<String,Boolean> getCelectMap(){
+        return celectMap;
+    }
+    public void setCelectMap(Map<String,Boolean> celectMap){
+        this.celectMap = celectMap;
+    }
+
+
+    public void setDetermineClickListener(OnClickListener listener) {
+        determine.setOnClickListener(listener);
+    }
+}

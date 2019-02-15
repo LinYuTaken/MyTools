@@ -1,0 +1,20 @@
+package com.example.tools;
+
+public class XTooL {
+	/**
+	 * 多余切割
+	 * @param zi
+	 * @return
+	 */
+	public static String cutting(Object zi){
+		String i = "";
+		if(zi==null)
+			return i;
+		i = zi.toString();
+		int ii = i.indexOf(".0");
+		if(ii>=0){
+			i = i.substring(0, ii);
+		}
+		return i;
+	}
+}

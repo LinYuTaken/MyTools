@@ -1,0 +1,259 @@
+package com.sy.mobile.analytical;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import android.app.Activity;
+import android.app.ActivityGroup;
+import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
+import android.media.MediaRecorder;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.util.Base64;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+
+/**
+ * 获取照片（拍照、本地图片）
+ * @author Administrator
+ *
+ */
+public class PhotoS
+{
+
+    /* 用来标识请求照相功能的activity */
+    public static final int CAMERA_WITH_DATA = 1001;
+    /* 用来标识请求gallery的activity */
+    public static final int PHOTO_PICKED_WITH_DATA = 1002;
+    // 用来标示请求录音功能的activity
+    private static final int RESULT_CAPTURE_RECORDER_SOUND = 1003;
+    // 用来标示请求视频录制功能的activity
+    private static final int REQUEST_CODE_TAKE_VIDEO = 1004;
+    // 手机图片路径
+    private String imagePath = "";
+    // 拍照路径
+    private String strImgPath = "";
+    // 获得用户名的文本框
+    private EditText mNameText = null;
+    // 获得省份证的文本框
+    private EditText mIdText = null;
+    // 获得信息的文本框
+    private EditText mAlarmInfoText = null;
+    // 文件路径文本框
+    private EditText mPictext = null;
+    // 多媒体设备
+    private MediaRecorder mRecod;
+    // 录音文件的路径
+    private String strRecorderPath = "";
+    // 摄制视频文件的路径
+    private String strVideoPath = "";
+
+    private Activity context;
+
+    public PhotoS(Activity context){
+        this.context = context;
+    }
+
+//    @Override
+//    protected void onCreate(Bundle savedInstanceState)
+//    {
+//        super.onCreate(savedInstanceState);
+//        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+//        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+//                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+//        // 上传本地照片的按钮
+//
+//
+//        // 拍照按钮
+//
+//
+//
+//        // 视频录制按钮监听事件
+//        Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+//        intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0);
+//        startActivityForResult(intent, REQUEST_CODE_TAKE_VIDEO);
+//    }
+    /**
+     * 选择本地图片
+     */
+    public void  localPicture(){
+        Intent intent = new Intent();
+        /* 开启Pictures画面Type设定为image */
+        intent.setType("image/*");
+        /* 使用Intent.ACTION_GET_CONTENT这个Action */
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        /* 取得相片后返回本画面 */
+        context.startActivityForResult(intent, PHOTO_PICKED_WITH_DATA);
+    }
+
+    /**
+     * 拍照
+     */
+    public void photograph(){
+        Intent imageCaptureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // 存放照片的文件夹
+        strImgPath = Environment.getExternalStorageDirectory().toString() + "/media/";
+        // 照片命名
+        String fileName = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()) + ".jpg";
+        File out = new File(strImgPath);
+        if (!out.exists())
+        {
+            // 创建文件夹
+            out.mkdirs();
+        }
+        out = new File(strImgPath, fileName);
+        // 该照片的绝对路径
+        strImgPath = strImgPath + fileName;
+        Uri uri = Uri.fromFile(out);
+        imageCaptureIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+        imageCaptureIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
+        context.startActivityForResult(imageCaptureIntent, CAMERA_WITH_DATA);
+    }
+
+//    @Override
+//     protected void onActivityResult(int requestCode, int resultCode, Intent data){
+//
+//    	Toast.makeText(context, "ddd",Toast.LENGTH_LONG).show();
+//        switch (requestCode)
+//        {
+//        // 本地图片
+//            case PHOTO_PICKED_WITH_DATA:
+//                Uri mUri = data.getData();
+//                String[] projection = { MediaStore.Images.Media.DATA };
+//                Cursor actualimagecursor = managedQuery(mUri, projection, null, null, null);
+//                int actual_image_column_index = actualimagecursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+//                actualimagecursor.moveToFirst();
+//                // 获取文件路径,方便上传文件等
+//                imagePath = actualimagecursor.getString(actual_image_column_index);
+//                mPictext.setText(imagePath);
+//                break;
+//            // 照相机拍照
+//            case CAMERA_WITH_DATA:
+////                EditText mphototext = (EditText) findViewById(R.id.phototext);
+////                mphototext.setText(strImgPath);
+//                break;
+//            // 录音
+//            case RESULT_CAPTURE_RECORDER_SOUND:
+//                if (resultCode == RESULT_OK)
+//                {
+//                    Uri uriRecorder = data.getData();
+//                    Cursor mCusor = this.getContentResolver().query(uriRecorder, null, null, null, null);
+//                    if (mCusor.moveToNext())
+//                    {
+//                        // _data：文件的绝对路径 ，_display_name：文件名
+//                        strRecorderPath = mCusor.getString(mCusor.getColumnIndex("_data"));
+//                        Toast.makeText(this, strRecorderPath, Toast.LENGTH_SHORT).show();
+//                    }
+//                }
+//                break;
+//            // 视频摄制
+//            case REQUEST_CODE_TAKE_VIDEO:
+//                if (resultCode == RESULT_OK)
+//                {
+//                    Uri uriVideo = data.getData();
+//                    Cursor cursor = this.getContentResolver().query(uriVideo, null, null, null, null);
+//                    if (cursor.moveToNext())
+//                    {
+//                        strVideoPath = cursor.getString(cursor.getColumnIndex("_data"));
+//                        Toast.makeText(this, strVideoPath, Toast.LENGTH_SHORT).show();
+//                    }
+//                }
+//                break;
+//        }
+//        super.onActivityResult(requestCode, resultCode, data);
+//    }
+    /**
+     * 图片路径换转字符串
+     * @param path
+     * @return
+     * @throws Exception
+     */
+    public String readStream(String path)  throws Exception
+    {
+        File file = new File(path);
+        InputStream inStream = new FileInputStream(file);
+        byte[] buffer = new byte[1024];
+        int len = -1;
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        while ((len = inStream.read(buffer)) != -1)
+        {
+            outStream.write(buffer, 0, len);
+        }
+        byte[] data = outStream.toByteArray();
+        String mImage = new String(Base64.encode(data,0));
+        outStream.close();
+        inStream.close();
+        return mImage;
+    }
+
+    /**
+     * 字符串转换图片
+     * @param res
+     * @param filePath
+     * @return
+     */
+    public boolean string2File(String res, String filePath)
+    {
+        boolean flag = true;
+        BufferedReader bufferedReader = null;
+        BufferedWriter bufferedWriter = null;
+        try
+        {
+            File distFile = new File(filePath);
+            if (!distFile.getParentFile().exists())
+                distFile.getParentFile().mkdirs();
+            bufferedReader = new BufferedReader(new StringReader(res));
+            bufferedWriter = new BufferedWriter(new FileWriter(distFile));
+            char buf[] = new char[1024]; // 字符缓冲区
+            int len;
+            while ((len = bufferedReader.read(buf)) != -1)
+            {
+                bufferedWriter.write(buf, 0, len);
+            }
+            bufferedWriter.flush();
+            bufferedReader.close();
+            bufferedWriter.close();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+            flag = false;
+            return flag;
+        }
+        finally
+        {
+            if (bufferedReader != null)
+            {
+                try
+                {
+                    bufferedReader.close();
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return flag;
+    }
+}

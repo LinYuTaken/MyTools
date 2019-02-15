@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content" >
+
+    <!-- <Button
+        android:id="@+id/button_back"
+        android:layout_width="75.0dip"
+        android:text="返回"
+        android:background="@drawable/mm_title_back_btn"
+        android:textColor="@android:color/white"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="2dip" />
+
+    <TextView
+        android:id="@+id/textview_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/button_back"
+        android:layout_alignBottom="@+id/button_back"
+        android:layout_centerHorizontal="true"
+        android:gravity="center_vertical"
+        android:text="二维码扫描"
+        android:textColor="@android:color/white"
+        android:textSize="18sp" /> -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="#393A3F">
+
+        <ImageView
+            android:id="@+id/button_back"
+            android:layout_width="50dp"
+            android:layout_height="fill_parent"
+            android:padding="7dp"
+            android:src="@drawable/retu_yx" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:text="扫一扫"
+            android:textColor="#fefefe"
+            android:textSize="20dp" />
+    </RelativeLayout>
+</RelativeLayout>

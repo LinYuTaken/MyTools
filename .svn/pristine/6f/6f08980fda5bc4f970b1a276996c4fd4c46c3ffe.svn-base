@@ -1,0 +1,18 @@
+package com.example.config;
+
+import java.util.List;
+import java.util.Map;
+
+public class conobj {
+	Object zhanghao;
+
+	public Object getZhanghao() {
+		return zhanghao;
+	}
+
+	public void setZhanghao(Object zhanghao) {
+		this.zhanghao = zhanghao;
+	}
+	
+	
+}
